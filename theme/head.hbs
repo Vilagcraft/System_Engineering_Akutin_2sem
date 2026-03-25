@@ -1,6 +1,35 @@
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    mermaid.initialize({ startOnLoad: true });
-  });
+  (function() {
+    // Ждём полной загрузки страницы
+    window.addEventListener('load', function() {
+      // Инициализируем Mermaid с настройками
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: 'base',
+        securityLevel: 'loose',
+        flowchart: {
+          useMaxWidth: true,
+          htmlLabels: true
+        }
+      });
+      
+      // Запускаем рендеринг всех mermaid-блоков
+      mermaid.run({
+        querySelector: '.language-mermaid',
+        suppressErrors: true
+      }).catch(e => console.warn('Mermaid error:', e));
+    });
+  })();
 </script>
+<style>
+  .language-mermaid {
+    background: transparent;
+    text-align: center;
+    margin: 1em 0;
+  }
+  .mermaid svg {
+    max-width: 100%;
+    height: auto;
+  }
+</style>
