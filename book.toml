@@ -1,9 +1,9 @@
 [book]
-authors = ["Jho00"]
-language = "en"
+authors = ["Vilagcraft"]
+language = "ru"
 multilingual = false
 src = "src"
-title = "system-engineering-playbook"
+title = "Системная инженерия. RocketSpot"
 
 [build]
 build-dir = "book"
@@ -13,5 +13,11 @@ create-missing = true
 command = "mdbook-drawio"
 
 [output.html]
+# Используем кастомную тему
+theme = "theme"
+# Включаем Mermaid
 additional-css = ["src/_assets/custom.css"]
 additional-js = []
+
+[output.html.print]
+enable = true
