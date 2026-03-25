@@ -177,7 +177,6 @@ graph LR
 <summary>📁 Показать контекстную диаграмму (кликните для раскрытия)</summary>
 
 ```mermaid
-
 graph TB
     subgraph Users["👥 ПОЛЬЗОВАТЕЛИ И ПАРТНЕРЫ"]
         Trader["Трейдер<br/>(розничный/корпоративный)"]
@@ -240,17 +239,16 @@ graph TB
 
     %% Стилизация
     classDef centralStyle fill:#cfe6ff,stroke:#2b4c66,stroke-width:3px,color:#000,font-weight:bold
-    classDef userStyle fill:##000000,stroke:#0288d1,stroke-width:2px
-    classDef roleStyle fill:##000000,stroke:#7b1fa2,stroke-width:2px
-    classDef govStyle fill:##000000,stroke:#c62828,stroke-width:2px
-    classDef techStyle fill:##000000,stroke:#2e7d32,stroke-width:2px
+    classDef userStyle fill:#000000,stroke:#0288d1,stroke-width:2px
+    classDef roleStyle fill:#000000,stroke:#7b1fa2,stroke-width:2px
+    classDef govStyle fill:#000000,stroke:#c62828,stroke-width:2px
+    classDef techStyle fill:#000000,stroke:#2e7d32,stroke-width:2px
     
     class Central centralStyle
     class Trader,MM userStyle
     class Compliance,Treasury,SecOps roleStyle
     class Gov govStyle
     class HSM,Blockchain,Banks techStyle
-
 ```
 
 **Внешние сущности:**
