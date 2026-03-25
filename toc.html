@@ -15,23 +15,27 @@
         <meta charset="UTF-8">
         <meta name="robots" content="noindex">
         <!-- Custom HTML head -->
+
         <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
         <script>
           (function() {
-            // Ждём полной загрузки страницы
             window.addEventListener('load', function() {
-              // Инициализируем Mermaid с настройками
               mermaid.initialize({
                 startOnLoad: true,
                 theme: 'base',
                 securityLevel: 'loose',
                 flowchart: {
-                  useMaxWidth: true,
-                  htmlLabels: true
+                  useMaxWidth: false,     // ← отключаем ограничение
+                  htmlLabels: true,
+                  curve: 'basis',
+                  padding: 20
+                },
+                themeVariables: {
+                  fontSize: '16px',
+                  fontFamily: 'Arial, sans-serif'
                 }
               });
               
-              // Запускаем рендеринг всех mermaid-блоков
               mermaid.run({
                 querySelector: '.language-mermaid',
                 suppressErrors: true
@@ -39,17 +43,104 @@
             });
           })();
         </script>
+        
         <style>
+          /* Стили для диаграмм */
           .language-mermaid {
             background: transparent;
             text-align: center;
-            margin: 1em 0;
+            margin: 2em 0;
           }
+          
+          .mermaid {
+            display: flex;
+            justify-content: center;
+          }
+          
           .mermaid svg {
-            max-width: 100%;
+            width: 100%;
+            max-width: 1400px;
             height: auto;
+            min-width: 700px;
+          }
+          
+          /* Увеличиваем шрифты внутри диаграммы */
+          .mermaid .node rect,
+          .mermaid .node circle,
+          .mermaid .node polygon,
+          .mermaid .nodeLabel {
+            font-size: 15px !important;
+          }
+          
+          .mermaid .edgeLabel {
+            font-size: 13px !important;
+          }
+          
+          .mermaid .cluster-label .label {
+            font-size: 17px !important;
+            font-weight: bold;
+          }
+          
+          /* Увеличиваем контентную область */
+          .content {
+            max-width: 1400px !important;
+          }
+          
+          /* Кнопки масштабирования (опционально) */
+          .mermaid-toolbar {
+            text-align: center;
+            margin: 10px 0 20px 0;
+          }
+          
+          .mermaid-toolbar button {
+            margin: 0 5px;
+            padding: 6px 12px;
+            cursor: pointer;
+            background: #2b4c66;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+          }
+          
+          .mermaid-toolbar button:hover {
+            background: #1e3a4f;
           }
         </style>
+        
+        <!-- Кнопки масштабирования -->
+        <div class="mermaid-toolbar">
+          <button onclick="zoomOut()">🔍− Уменьшить</button>
+          <button onclick="resetZoom()">⟳ Сброс</button>
+          <button onclick="zoomIn()">🔍+ Увеличить</button>
+        </div>
+        
+        <script>
+          function zoomIn() {
+            const svgs = document.querySelectorAll('.mermaid svg');
+            svgs.forEach(svg => {
+              let currentWidth = svg.clientWidth;
+              svg.style.width = (currentWidth * 1.2) + 'px';
+              svg.style.maxWidth = 'none';
+            });
+          }
+          
+          function zoomOut() {
+            const svgs = document.querySelectorAll('.mermaid svg');
+            svgs.forEach(svg => {
+              let currentWidth = svg.clientWidth;
+              svg.style.width = Math.max(400, currentWidth * 0.8) + 'px';
+            });
+          }
+          
+          function resetZoom() {
+            const svgs = document.querySelectorAll('.mermaid svg');
+            svgs.forEach(svg => {
+              svg.style.width = '';
+              svg.style.maxWidth = '';
+            });
+          }
+        </script>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
         <link rel="stylesheet" href="css/variables.css">
