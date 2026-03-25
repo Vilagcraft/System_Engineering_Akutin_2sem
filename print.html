@@ -177,46 +177,625 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="md-example"><a class="header" href="#md-example">MD Example</a></h1>
-<h3 id="Структура-проекта"><a class="header" href="#Структура-проекта">Структура проекта</a></h3>
+                        <hr />
+<h1 id="cистемная-инженерия--Проектирование-криптобиржи-rocketspot"><a class="header" href="#cистемная-инженерия--Проектирование-криптобиржи-rocketspot">Cистемная инженерия.  Проектирование криптобиржи <strong>RocketSpot</strong>.</a></h1>
+<hr />
+<h2 id="1-Контекст-и-границы-системы-system-of-interest---soi"><a class="header" href="#1-Контекст-и-границы-системы-system-of-interest---soi">1. Контекст и границы системы (System of Interest - SoI)</a></h2>
+<h3 id="11-Цель-системы-Миссия"><a class="header" href="#11-Цель-системы-Миссия">1.1 Цель системы (Миссия)</a></h3>
+<p>Спроектировать, реализовать и эксплуатировать <strong>высоконадежную, безопасную и соответствующую нормативным требованиям платформу для криптовалютной биржи RocketSpot</strong>, которая обеспечивает:</p>
 <ul>
-<li><code>src/</code> - основная директория с контентом
+<li><strong>Self-service управление ключами и доступом</strong> к API для торговли, вывода средств и управления счетами.</li>
+<li><strong>Оркестрацию "холодных" и "горячих" кошельков</strong> с гарантированной безопасностью и соблюдением SLA на вывод средств.</li>
+<li><strong>Централизованный аудит и контроль</strong> всех операций с активами, соответствующий требованиям ЦБ РФ (по аналогии с НФО), ПОД/ФТ и внутренним политикам ИБ.</li>
+<li><strong>Изоляцию</strong> между различными типами клиентов (розничные, корпоративные, маркет-мейкеры) и внутренними сервисами биржи.</li>
+</ul>
+<h3 id="12-Контекст-Среда-и-внешние-системы"><a class="header" href="#12-Контекст-Среда-и-внешние-системы">1.2 Контекст (Среда и внешние системы)</a></h3>
 <ul>
-<li><code>SUMMARY.md</code> - файл навигации/оглавления</li>
-<li>Все остальные <code>.md</code> файлы - страницы документации</li>
+<li><strong>Эксплуатационная среда:</strong> Гибридное облако (Yandex Cloud / собственный ЦОД), изолированные сегменты сети (DMZ, сеть обработки платежей, HSM-сегмент).</li>
+<li><strong>Операционный контур:</strong> Platform Engineering, SecOps, Treasury (казначейство), Compliance, Legal.</li>
+<li><strong>Каналы взаимодействия:</strong>
+<ul>
+<li><strong>Web UI/Мобильное приложение:</strong> для трейдеров и корпоративных клиентов.</li>
+<li><strong>REST/WebSocket API:</strong> для алгоритмической торговли и партнерских интеграций.</li>
+<li><strong>Административная консоль:</strong> для операторов биржи и ИБ-аналитиков.</li>
+</ul>
+</li>
+<li><strong>Ключевые ограничения:</strong>
+<ul>
+<li><strong>Регуляторные:</strong> 115-ФЗ, 259-ФЗ (О внесении изменений в отдельные законодательные акты РФ), требования к хранению данных (ФЗ-152), локализации персональных данных на территории РФ.</li>
+<li><strong>Технические:</strong> Криптографическая стойкость (ГОСТ Р 34.10-2012/2021, использование НСДКИ), разделение "горячих" и "холодных" хранилищ, использование HSM (Hardware Security Module).</li>
 </ul>
 </li>
 </ul>
-<h3 id="Расположение-файлов"><a class="header" href="#Расположение-файлов">Расположение файлов</a></h3>
-<ul>
-<li>Все Markdown файлы должны находиться в директории <code>src/</code>. Рекомендуется ссылаться на md файлы из SUMMARY.md (см. пример в SUMMARY.md).</li>
-<li>Изображения и другие ресурсы рекомендуется хранить в релеватных папках <code>src/images</code>, <code>src/diagrams</code> и тд.</li>
-</ul>
-<h3 id="Локальная-разработка"><a class="header" href="#Локальная-разработка">Локальная разработка</a></h3>
-<ol>
-<li>Установите MDBook <a href="https://rust-lang.github.io/mdBook/guide/installation.html">инструкция</a></li>
-<li>Запустите сервер разработки:</li>
-</ol>
-<pre><code class="language-bash">mdbook serve --open
+<h3 id="13-Контекстная-диаграмма-rocketspot-Сервис-управления-доступом-и-оркестрации-криптоактивов"><a class="header" href="#13-Контекстная-диаграмма-rocketspot-Сервис-управления-доступом-и-оркестрации-криптоактивов">1.3 Контекстная диаграмма RocketSpot (Сервис управления доступом и оркестрации криптоактивов)</a></h3>
+<pre><code class="language-mermaid">graph LR
+    subgraph LEFT["ВЕРХНИЙ СЕКТОР (Пользователи)"]
+        direction TB
+        Trader["Трейдер (розничный)"]
+        MM["Маркет-мейкер"]
+        Corporate["Корпоративный клиент"]
+    end
+
+    subgraph TOP["СРЕДНИЙ СЕКТОР (Интеграции IdP/Почта/BI)"]
+        direction LR
+        SSO["IdP/SSO"]
+        Mail["Почта+SMS"]
+        BI["BI/Аналитика"]
+    end
+
+    subgraph RIGHT["НИЖНИЙ СЕКТОР (Внутренние роли)"]
+        direction TB
+        Compliance["Compliance"]
+        Treasury["Казначей"]
+        SecOps["SecOps"]
+        Auditor["Аудитор"]
+        Admin["Администратор"]
+    end
+
+    subgraph BOTTOM["ЛЕВЫЙ СЕКТОР (Технические интеграции)"]
+        direction LR
+        HSM["HSM КриптоПро"]
+        Blockchain["Блокчейн-ноды"]
+        Gateway["API Gateway"]
+        SIEM["SIEM/MaxPatrol"]
+        Payment["Платежные шлюзы"]
+        CICD["CI/CD"]
+    end
+
+    Central["🎯 RocketSpot Core Platform&lt;br/&gt;(Торговый движок + Оркестратор кошельков + Управление доступом)"]
+
+    LEFT --&gt; Central
+    TOP --&gt; Central
+    RIGHT --&gt; Central
+    BOTTOM --&gt; Central
+
+    Central --&gt; LEFT
+    Central --&gt; TOP
+    Central --&gt; RIGHT
+    Central --&gt; BOTTOM
 </code></pre>
-<ol start="3">
-<li>Откройте http://localhost:3000 в браузере.</li>
-</ol>
-<h3 id="Конфигурация-репозитория"><a class="header" href="#Конфигурация-репозитория">Конфигурация репозитория</a></h3>
+<h3 id="14-Код-диаграммы"><a class="header" href="#14-Код-диаграммы">1.4 Код диаграммы</a></h3>
+<details>
+<summary>📁 Показать код диаграмм (кликните для раскрытия)</summary>
+<pre><code class="language-dot">graph LR
+    subgraph LEFT["ВЕРХНИЙ СЕКТОР (Пользователи)"]
+        direction TB
+        Trader["Трейдер (розничный)"]
+        MM["Маркет-мейкер"]
+        Corporate["Корпоративный клиент"]
+    end
+
+    subgraph TOP["СРЕДНИЙ СЕКТОР (Интеграции IdP/Почта/BI)"]
+        direction LR
+        SSO["IdP/SSO"]
+        Mail["Почта+SMS"]
+        BI["BI/Аналитика"]
+    end
+
+    subgraph RIGHT["НИЖНИЙ СЕКТОР (Внутренние роли)"]
+        direction TB
+        Compliance["Compliance"]
+        Treasury["Казначей"]
+        SecOps["SecOps"]
+        Auditor["Аудитор"]
+        Admin["Администратор"]
+    end
+
+    subgraph BOTTOM["ЛЕВЫЙ СЕКТОР (Технические интеграции)"]
+        direction LR
+        HSM["HSM КриптоПро"]
+        Blockchain["Блокчейн-ноды"]
+        Gateway["API Gateway"]
+        SIEM["SIEM/MaxPatrol"]
+        Payment["Платежные шлюзы"]
+        CICD["CI/CD"]
+    end
+
+    Central["🎯 RocketSpot Core Platform&lt;br/&gt;(Торговый движок + Оркестратор кошельков + Управление доступом)"]
+
+    LEFT --&gt; Central
+    TOP --&gt; Central
+    RIGHT --&gt; Central
+    BOTTOM --&gt; Central
+
+    Central --&gt; LEFT
+    Central --&gt; TOP
+    Central --&gt; RIGHT
+    Central --&gt; BOTTOM
+</code></pre>
+</details>
+<h2 id="15-Текстовая-декомпозиция-external-entity--flow"><a class="header" href="#15-Текстовая-декомпозиция-external-entity--flow">1.5 Текстовая декомпозиция (External Entity ↔ Flow)</a></h2>
+<details>
+<summary> 📁 Показать текстовую декомпозицию (кликните для раскрытия) </summary>
+<div class="table-wrapper"><table><thead><tr><th>Внешняя сущность</th><th>Поток в систему (Input)</th><th>Поток из системы (Output)</th></tr></thead><tbody>
+<tr><td><strong>Трейдер (розничный)</strong></td><td>Торговые ордера, заявки на вывод, API-ключи, 2FA-коды</td><td>Исполнение ордеров, статус вывода, балансы, история транзакций</td></tr>
+<tr><td><strong>Маркет-мейкер</strong></td><td>Высокочастотные ордера, индивидуальные rate limit запросы</td><td>Рыночные данные, статусы лимитов, алерты по рискам</td></tr>
+<tr><td><strong>Корпоративный клиент</strong></td><td>Корпоративные выводы, запросы на мультиподпись, API для казначейства</td><td>Выписки по счетам, статусы одобрения, экспортные отчеты</td></tr>
+<tr><td><strong>IdP / SSO (Keycloak/AD)</strong></td><td>Утверждения доступа, MFA challenge, group claims, session state</td><td>Проверка сессии, user info, logout events</td></tr>
+<tr><td><strong>Почтовый сервис + SMS</strong></td><td>Статус доставки, bounce events, delivery confirmations</td><td>Уведомления о выводах, 2FA коды, подтверждения операций, алерты</td></tr>
+<tr><td><strong>BI / Аналитика (Tableau)</strong></td><td>KPI-запросы, AML-отчетность, дашборд-запросы</td><td>Агрегированные отчеты, транзакционные данные, метрики SLA</td></tr>
+<tr><td><strong>Compliance-офицер</strong></td><td>Установка лимитов, заморозка/разморозка счетов, AML-правила, ручное одобрение</td><td>Алерты по подозрительным транзакциям, отчеты по 115-ФЗ, очереди на проверку</td></tr>
+<tr><td><strong>Казначей (Treasury)</strong></td><td>Пополнение hot wallet, инициация cold storage вывода, мультиподпись</td><td>Статусы резервов, транзакции на подпись, уведомления о движении средств</td></tr>
+<tr><td><strong>SecOps / ИБ-аналитик</strong></td><td>Ротация мастер-ключей, emergency revoke, настройки политик безопасности</td><td>Алерты безопасности, журнал инцидентов, статусы HSM</td></tr>
+<tr><td><strong>Аудитор / Регулятор</strong></td><td>Запрос аудита, compliance check, запрос детализации</td><td>Evidence-отчеты, неизменяемый журнал, выгрузки по транзакциям</td></tr>
+<tr><td><strong>Администратор платформы</strong></td><td>Настройки системы, override-правила, шаблоны политик, управление инстансами</td><td>Ошибки и конфликты, метрики системы, статусы компонентов</td></tr>
+<tr><td><strong>HSM Cluster (КриптоПро)</strong></td><td>Криптографические операции, подписанные хэши, статусы ключей</td><td>Запрос на подпись транзакции, генерация ключей, ротация</td></tr>
+<tr><td><strong>Блокчейн-ноды (BTC/ETH/TRON)</strong></td><td>Подтверждения транзакций, балансы адресов, nonce, fee estimates</td><td>Подписанные транзакции, broadcast запросы, getBalance</td></tr>
+<tr><td><strong>API Gateway (Kong)</strong></td><td>Проверка токена, rate limit violations, policy check запросы</td><td>Политики доступа, revocation updates, allow/deny metadata</td></tr>
+<tr><td><strong>SIEM / Логирование (MaxPatrol)</strong></td><td>Теги инцидентов, correlation lookup, enrichment data</td><td>События безопасности, audit events, алерты по аномалиям</td></tr>
+<tr><td><strong>Платежные шлюзы (Фиат)</strong></td><td>Фиатные депозиты, статусы выплат, чарджбеки</td><td>Запросы на выплату, статусы транзакций, верификации</td></tr>
+<tr><td><strong>CI/CD (GitLab)</strong></td><td>M2M-запросы, деплой конфигураций, миграции БД</td><td>Сервисные учетные данные, статусы операций, health checks</td></tr>
+</tbody></table>
+</div></details>
+<h2 id="16-Стейкхолдеры-stakeholders-rocketspot"><a class="header" href="#16-Стейкхолдеры-stakeholders-rocketspot">1.6 Стейкхолдеры (Stakeholders) RocketSpot</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Стейкхолдер</th><th>Роль</th><th>Интересы / Ожидания</th><th>Ключевые требования</th></tr></thead><tbody>
+<tr><td><strong>Трейдер (розничный)</strong></td><td>Конечный пользователь</td><td>Быстрое исполнение ордеров, прозрачность комиссий, безопасность средств, простой вывод</td><td>SR-SH-1: Скорость вывода до 30 мин, интуитивный UI</td></tr>
+<tr><td><strong>Маркет-мейкер</strong></td><td>Профессиональный трейдер</td><td>Низкая задержка (low latency), индивидуальные лимиты API, стабильность WebSocket</td><td>SR-SH-2: Rate limit 1000+ RPS, SLA 99.99%</td></tr>
+<tr><td><strong>Корпоративный клиент</strong></td><td>Юридическое лицо</td><td>Мультиподпись для вывода, интеграция с казначейскими системами, отчетность</td><td>SR-SH-6: API для автоматизации, выписки для налоговой</td></tr>
+<tr><td><strong>Compliance-офицер</strong></td><td>Сотрудник отдела комплаенс</td><td>Инструменты для AML/CFT, блокировка подозрительных счетов, отчетность для 115-ФЗ</td><td>SR-SH-3: freeze в real-time, черные списки адресов</td></tr>
+<tr><td><strong>Казначей (Treasury)</strong></td><td>Финансовый сотрудник</td><td>Управление горячими/холодными кошельками, мультиподпись, контроль ликвидности</td><td>SR-SH-4: M of N policy, автоматическая sweep-функция</td></tr>
+<tr><td><strong>SecOps / ИБ-аналитик</strong></td><td>Специалист по безопасности</td><td>Мониторинг инцидентов, управление ключами HSM, ротация секретов, аудит доступа</td><td>SR-SH-5: Все ключи в HSM, revoke SLA &lt; 60 сек</td></tr>
+<tr><td><strong>Аудитор / Регулятор</strong></td><td>Внешний контролирующий орган</td><td>Неизменяемый журнал операций, возможность экспорта данных, соответствие 115-ФЗ</td><td>SR-SH-6: WORM-хранилище, отчет за 1 час по запросу</td></tr>
+<tr><td><strong>Администратор платформы</strong></td><td>SRE / Platform Engineer</td><td>Наблюдаемость, автоматическое масштабирование, управление конфигурациями</td><td>SR-SH-7: HA архитектура, RTO &lt; 15 мин</td></tr>
+<tr><td><strong>Бизнес-владелец</strong></td><td>CEO / Product Owner</td><td>Рентабельность, удержание клиентов, соответствие регуляторным требованиям</td><td>SR-SH-7: Доступность 99.95%, MTTR &lt; 30 мин</td></tr>
+<tr><td><strong>Разработчик (Dev)</strong></td><td>Инженер</td><td>Понятные API, CI/CD, тестовая среда, документация</td><td>SR-SH-8: Swagger/OpenAPI, локальный запуск, тестовые сети</td></tr>
+</tbody></table>
+</div>
+<h3 id="17-Контекстная-диаграмма-l0-soi--внешние-сущности"><a class="header" href="#17-Контекстная-диаграмма-l0-soi--внешние-сущности">1.7 Контекстная диаграмма (L0: SoI ↔ внешние сущности)</a></h3>
+<details>
+<summary>📁 Показать контекстную диаграмму (кликните для раскрытия)</summary>
+<pre><code class="language-mermaid">graph TB
+    subgraph Users["👥 ПОЛЬЗОВАТЕЛИ И ПАРТНЕРЫ"]
+        Trader["Трейдер&lt;br/&gt;(розничный/корпоративный)"]
+        MM["Маркет-мейкер"]
+    end
+
+    subgraph InternalRoles["👔 ВНУТРЕННИЕ РОЛИ"]
+        Compliance["Compliance-офицер&lt;br/&gt;(AML/CFT)"]
+        Treasury["Казначей&lt;br/&gt;(Treasury)"]
+        SecOps["SecOps&lt;br/&gt;(Security Operations)"]
+    end
+
+    subgraph ExternalSystems["🏛️ ВНЕШНИЕ ОРГАНЫ"]
+        Gov["Государственные органы&lt;br/&gt;(ФНС, Росфинмониторинг)"]
+    end
+
+    subgraph TechInfra["⚙️ ТЕХНИЧЕСКАЯ ИНФРАСТРУКТУРА"]
+        HSM["HSM Cluster&lt;br/&gt;(КриптоПро)"]
+        Blockchain["Блокчейн-ноды&lt;br/&gt;(BTC/ETH/TRON)"]
+        Banks["Банки-эквайеры&lt;br/&gt;Платежные системы"]
+    end
+
+    Central["🎯 TokenSpot Core Platform&lt;br/&gt;──────────────────&lt;br/&gt;Торговый движок | Оркестратор кошельков&lt;br/&gt;API Gateway | AML/CFT Движок&lt;br/&gt;HSM-Адаптер | KMS | Аудиторское хранилище"]
+
+    %% Потоки: Трейдер
+    Trader --&gt;|"Заявка на вывод&lt;br/&gt;API-ключи для торговли"| Central
+    Central --&gt;|"Статус вывода&lt;br/&gt;API-секреты&lt;br/&gt;История транзакций"| Trader
+
+    %% Потоки: Маркет-мейкер
+    MM --&gt;|"Высокочастотные ордера&lt;br/&gt;Алгоритмическая торговля"| Central
+    Central --&gt;|"Рыночные данные&lt;br/&gt;Статусы лимитов"| MM
+
+    %% Потоки: Compliance
+    Compliance --&gt;|"Установка лимитов&lt;br/&gt;Заморозка средств&lt;br/&gt;Запросы на детализацию"| Central
+    Central --&gt;|"Алерты по подозрительным транзакциям&lt;br/&gt;AML-отчеты"| Compliance
+
+    %% Потоки: Treasury
+    Treasury --&gt;|"Пополнение hot wallet&lt;br/&gt;Подписание мультисиг транзакций&lt;br/&gt;Управление холодным хранилищем"| Central
+    Central --&gt;|"Статусы резервов&lt;br/&gt;Транзакции на подпись"| Treasury
+
+    %% Потоки: SecOps
+    SecOps --&gt;|"Ротация ключей&lt;br/&gt;Emergency revoke&lt;br/&gt;Управление политиками безопасности"| Central
+    Central --&gt;|"Алерты безопасности&lt;br/&gt;Журнал инцидентов"| SecOps
+
+    %% Потоки: Госорганы
+    Gov --&gt;|"Запросы отчетности&lt;br/&gt;Проверки compliance"| Central
+    Central --&gt;|"Отчеты по 115-ФЗ&lt;br/&gt;Данные по запросам"| Gov
+
+    %% Потоки: HSM
+    Central --&gt;|"Запрос на генерацию ключей&lt;br/&gt;Запрос на подпись транзакции"| HSM
+    HSM --&gt;|"Сгенерированные ключи&lt;br/&gt;Подписанные хэши"| Central
+
+    %% Потоки: Блокчейн-ноды
+    Central --&gt;|"Подписанные транзакции&lt;br/&gt;Broadcast запросы"| Blockchain
+    Blockchain --&gt;|"Подтверждения транзакций&lt;br/&gt;Балансы адресов&lt;br/&gt;Nonce, fee estimates"| Central
+
+    %% Потоки: Банки/Платежные системы
+    Banks --&gt;|"Фиатные депозиты&lt;br/&gt;Статусы выплат"| Central
+    Central --&gt;|"Запросы на выплату&lt;br/&gt;Чарджбеки"| Banks
+
+    %% Стилизация
+    classDef centralStyle fill:#cfe6ff,stroke:#2b4c66,stroke-width:3px,color:#000,font-weight:bold
+    classDef userStyle fill:#000000,stroke:#0288d1,stroke-width:2px
+    classDef roleStyle fill:#000000,stroke:#7b1fa2,stroke-width:2px
+    classDef govStyle fill:#000000,stroke:#c62828,stroke-width:2px
+    classDef techStyle fill:#000000,stroke:#2e7d32,stroke-width:2px
+    
+    class Central centralStyle
+    class Trader,MM userStyle
+    class Compliance,Treasury,SecOps roleStyle
+    class Gov govStyle
+    class HSM,Blockchain,Banks techStyle
+</code></pre>
+<p><strong>Внешние сущности:</strong></p>
 <ol>
-<li>Сделайте fork репозитория <a href="https://github.com/Jho00/system-engineering-playbook">mdb</a></li>
-<li>Перейдите в настройки своего github репозитория. Выберите вкладку Actions -&gt; General. Установите "Read and write permissions" в категории Workflow permissions</li>
+<li><strong>Трейдер (Розничный/Корпоративный):</strong> Человек или алгоритм, взаимодействующий через UI/API.</li>
+<li><strong>Маркет-мейкер:</strong> Внешний партнер с высокорисковыми объемами торгов.</li>
+<li><strong>Инспектор по комплаенсу (Compliance Officer):</strong> Сотрудник, отслеживающий подозрительные транзакции (AML/CFT).</li>
+<li><strong>Казначей (Treasury):</strong> Сотрудник, управляющий резервами биржи и ликвидностью.</li>
+<li><strong>SecOps (Security Operations):</strong> Команда, реагирующая на инциденты и управляющая ключами HSM.</li>
+<li><strong>Государственные органы (ФНС, Росфинмониторинг):</strong> Получатели отчетности и данных в рамках запросов.</li>
+<li><strong>HSM Cluster:</strong> Аппаратный кластер для генерации и хранения мастер-ключей.</li>
+<li><strong>Блокчейн-ноды (Bitcoin, Ethereum и др.):</strong> Внешние сети для проведения транзакций.</li>
+<li><strong>Банки-эквайеры / Платежные системы:</strong> Для фиатных шлюзов (рубли).</li>
 </ol>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="drawio-example"><a class="header" href="#drawio-example">Drawio Example</a></h1>
-<h3 id="Создание-диаграммы"><a class="header" href="#Создание-диаграммы">Создание диаграммы</a></h3>
+<p><strong>Потоки данных:</strong></p>
+<ul>
+<li><strong>Трейдер → SoI:</strong> Заявка на вывод, API-ключи для торговли.</li>
+<li><strong>SoI → Трейдер:</strong> Статус вывода, сгенерированные API-секреты, история транзакций.</li>
+<li><strong>Compliance → SoI:</strong> Установка лимитов, заморозка средств, запросы на детализацию.</li>
+<li><strong>SoI → Compliance:</strong> Алёрты по подозрительным транзакциям, отчеты.</li>
+<li><strong>Treasury → SoI:</strong> Запросы на пополнение "горячего" кошелька, подписание мультисиг транзакций "холодного" хранилища.</li>
+<li><strong>SoI → HSM:</strong> Запросы на генерацию ключей, подпись транзакций (аппаратно).</li>
+<li><strong>SoI → Блокчейн-ноды:</strong> Публикация подписанных транзакций.</li>
+</ul>
+</details>
+<h3 id="18-Границы-soi"><a class="header" href="#18-Границы-soi">1.8 Границы SoI</a></h3>
+<details>
+<summary>📁 Показать границы SoI (кликните для раскрытия)</summary>
+<h4 id="181-Внутри-soi-Разрабатываемые-компоненты"><a class="header" href="#181-Внутри-soi-Разрабатываемые-компоненты">1.8.1 Внутри SoI (Разрабатываемые компоненты)</a></h4>
 <ol>
-<li>Создайте диаграмму используя <a href="https://app.diagrams.net/">draw.io</a></li>
-<li>Сохраните файл в формате <code>.drawio</code> в проект</li>
-<li>Добавьте файл в индексацию git и отправьте в github репозиторий</li>
+<li><strong>Торговый движок (Matching Engine):</strong> Ядро биржи.</li>
+<li><strong>Клиентский портал / API Gateway:</strong> Шлюз для внешних запросов, управление сессиями и API-ключами.</li>
+<li><strong>Оркестратор Кошельков (Wallet Orchestrator):</strong> Управляет подписью и отправкой транзакций. Сердце системы.</li>
+<li><strong>HSM-Адаптер:</strong> Слой абстракции для работы с российскими НСДКИ (КриптоПро, ViPNet).</li>
+<li><strong>AML/CFT Движок:</strong> Система правил для мониторинга транзакций.</li>
+<li><strong>Система Управления Ключами (KMS):</strong> Жизненный цикл ключей (генерация, ротация, отзыв).</li>
+<li><strong>Аудиторское Хранилище:</strong> Неизменяемый журнал всех критических событий.</li>
+<li><strong>Административная консоль (Admin Back Office):</strong> Управление лимитами, пользователями, системами.</li>
 </ol>
-<h3 id="Добавление-диаграммы-в-документацию"><a class="header" href="#Добавление-диаграммы-в-документацию">Добавление диаграммы в документацию</a></h3>
-<p>Для вставки диаграммы используйте синтаксис из примера ниже, заметете, что необходимо указать ссылку на файл в репозитории.</p>
-<iframe class="drawio-viewer" src="https://viewer.diagrams.net/?highlight=0000ff&edit=_blank&layers=1&nav=1&title=diagram&url=https://raw.githubusercontent.com/bndroll/mdb/master/src/diagrams/qwe.drawio"></iframe>
+<h4 id="182-Снаружи-soi-Интегрируемые-системы"><a class="header" href="#182-Снаружи-soi-Интегрируемые-системы">1.8.2 Снаружи SoI (Интегрируемые системы)</a></h4>
+<ul>
+<li><strong>HSM Cluster (КриптоПро HSM / другие):</strong> Внешний аппаратный модуль.</li>
+<li><strong>Блокчейн-ноды (RPC):</strong> Сеть блокчейна (инфраструктура).</li>
+<li><strong>SIEM (например, MaxPatrol, Kaspersky):</strong> Внешняя система сбора и корреляции событий.</li>
+<li><strong>Внешние сервисы KYC (например, Sumsub):</strong> Проверка клиентов.</li>
+<li><strong>Платежные шлюзы (Фиат):</strong> Сбербанк, Тинькофф и т.д.</li>
+</ul>
+</details>
+<hr />
+<h2 id="2-conops-Концепция-операций"><a class="header" href="#2-conops-Концепция-операций">2. CONOPS (Концепция операций)</a></h2>
+<h3 id="21-Роли-и-поведение"><a class="header" href="#21-Роли-и-поведение">2.1 Роли и поведение</a></h3>
+<details>
+<summary>📁 Показать (кликните для раскрытия)</summary>
+<ul>
+<li>
+<p><strong>Трейдер (Клиент)</strong></p>
+<ul>
+<li><strong>Цель:</strong> Торговать и выводить средства.</li>
+<li><strong>Действия:</strong> Создает API-ключи с ограниченными правами (только торговля, без вывода). Инициирует вывод средств. Подтверждает вывод через Email/2FA.</li>
+<li><strong>Ограничения:</strong> Не может вывести больше суточного/месячного лимита. Не может генерировать ключи для вывода без 2FA.</li>
+</ul>
+</li>
+<li>
+<p><strong>Compliance-офицер (AML)</strong></p>
+<ul>
+<li><strong>Цель:</strong> Обеспечить соответствие 115-ФЗ, предотвратить отмывание средств.</li>
+<li><strong>Действия:</strong> Устанавливает риск-профили (LOW/MEDIUM/HIGH). Замораживает счета по подозрению. Формирует отчеты для Росфинмониторинга.</li>
+<li><strong>Критичные ожидания:</strong> Полная история транзакций, возможность блокировки вывода в реальном времени.</li>
+</ul>
+</li>
+<li>
+<p><strong>Казначей (Treasury)</strong></p>
+<ul>
+<li><strong>Цель:</strong> Управлять ликвидностью биржи и безопасностью холодного хранилища.</li>
+<li><strong>Действия:</strong> Инициирует перемещение средств из "горячего" кошелька в "холодный" и обратно. Участвует в мультиподписи (M of N) для критических транзакций.</li>
+<li><strong>Критичные ожидания:</strong> Управляемый процесс мультиподписи, защита от внутреннего мошенничества.</li>
+</ul>
+</li>
+<li>
+<p><strong>Инженер SecOps</strong></p>
+<ul>
+<li><strong>Цель:</strong> Обеспечить целостность системы управления ключами.</li>
+<li><strong>Действия:</strong> Производит ротацию мастер-ключей в HSM. Расследует инциденты безопасности.</li>
+<li><strong>Ограничения:</strong> Не может один подписать транзакцию на вывод из холодного хранилища (требует кворума).</li>
+</ul>
+</li>
+</ul>
+</details>
+<h3 id="22-Ключевой-сценарий-Вывод-криптовалюты-btc-eth"><a class="header" href="#22-Ключевой-сценарий-Вывод-криптовалюты-btc-eth">2.2 Ключевой сценарий: Вывод криптовалюты (BTC, ETH)</a></h3>
+<details>
+<summary>📁 Показать  (кликните для раскрытия)</summary>
+<p><strong>Цель:</strong> Обеспечить безопасный и предсказуемый вывод средств клиента, с балансом между автоматизацией (скорость) и безопасностью (сумма).</p>
+<ol>
+<li><strong>Инициирование:</strong> Трейдер на UI запрашивает вывод 0.5 BTC.</li>
+<li><strong>Предварительная проверка (Pre-flight):</strong>
+<ul>
+<li><strong>Аутентификация:</strong> Проверка 2FA, сессии.</li>
+<li><strong>AML Check:</strong> Движок AML проверяет адрес получателя по черным спискам и оценивает риск транзакции. Если риск &gt; порога -&gt; автоматический холд.</li>
+<li><strong>Лимиты:</strong> Проверка суточного лимита вывода.</li>
+</ul>
+</li>
+<li><strong>Блокировка средств:</strong> Система резервирует 0.5 BTC на "горячем" кошельке клиента.</li>
+<li><strong>Сборка транзакции:</strong> Оркестратор кошельков формирует сырую транзакцию (UTXO для BTC, raw tx для ETH).</li>
+<li><strong>Согласование (Workflow):</strong>
+<ul>
+<li>Если сумма &lt; 10,000 USD -&gt; <strong>Автоматическая подпись</strong> (через HSM).</li>
+<li>Если сумма &gt;= 10,000 USD -&gt; <strong>Step-up Approval</strong>: Заявка уходит в очередь Compliance-офицера на быстрый просмотр (автоматизация через правила).</li>
+</ul>
+</li>
+<li><strong>Подпись:</strong> Адаптер HSM отправляет хэш транзакции в HSM. HSM (работающий по ГОСТ) возвращает подпись. Для сумм выше 100,000 USD может требоваться мультиподпись (2 из 3 операторов казначейства подтверждают в админке).</li>
+<li><strong>Публикация:</strong> Оркестратор отправляет подписанную транзакцию в блокчейн-ноду.</li>
+<li><strong>Финализация:</strong> Система отслеживает количество подтверждений сети (confirmations). После достижения порога списывает средства со счета клиента и закрывает заявку.</li>
+</ol>
+</details>
+<hr />
+<h2 id="3-Требования"><a class="header" href="#3-Требования">3. Требования</a></h2>
+<h3 id="31-stakeholder-requirements-sr-sh"><a class="header" href="#31-stakeholder-requirements-sr-sh">3.1 Stakeholder requirements (SR-SH)</a></h3>
+<ul>
+<li><strong>SR-SH-1 (Трейдер):</strong> Высокая скорость исполнения вывода (до 30 мин для low-risk транзакций) с прозрачным статусом.</li>
+<li><strong>SR-SH-2 (Маркет-мейкер):</strong> Возможность создания API-ключей с индивидуальными лимитами на количество запросов в секунду (Rate Limit) без необходимости проходить KYC повторно.</li>
+<li><strong>SR-SH-3 (Compliance):</strong> Возможность в реальном времени приостановить (freeze) любой вывод средств или заблокировать учетную запись на основании внутреннего риск-скоринга.</li>
+<li><strong>SR-SH-4 (Treasury):</strong> Должна быть реализована политика "M of N" (мультиподпись) для всех транзакций из "холодного" хранилища, где ни один сотрудник не имеет полного контроля.</li>
+<li><strong>SR-SH-5 (SecOps):</strong> Все мастер-ключи должны генерироваться и храниться исключительно в сертифицированных ФСБ России HSM.</li>
+<li><strong>SR-SH-6 (Аудитор/Регулятор):</strong> Система должна предоставлять детальный отчет по любой транзакции (включая IP-адрес, user-agent, время утверждения) в течение 1 часа по официальному запросу.</li>
+<li><strong>SR-SH-7 (Бизнес):</strong> Система должна быть отказоустойчивой: отсутствие единой точки отказа (HA) в компонентах оркестрации кошельков и торгового движка.</li>
+</ul>
+<h3 id="32-Системные-требования-sr-sys---Выдержки"><a class="header" href="#32-Системные-требования-sr-sys---Выдержки">3.2 Системные требования (SR-SYS) - Выдержки</a></h3>
+<ul>
+<li><strong>SR-SYS-1 (Криптография):</strong> Все взаимодействия с блокчейном и хранение мнемонических фраз должны осуществляться через HSM (КриптоПро). Запрещено хранение приватных ключей в программном виде.</li>
+<li><strong>SR-SYS-2 (Жизненный цикл ключей):</strong> Период ротации мастер-ключей HSM не должен превышать 1 год. Процесс ротации требует физического присутствия 2 сотрудников SecOps.</li>
+<li><strong>SR-SYS-3 (AML):</strong> Система должна проверять все исходящие адреса по списку "Санкционных адресов" (OFAC, SDN и российские аналоги) перед подписью.</li>
+<li><strong>SR-SYS-4 (API Gateway):</strong> API-ключи клиента должны поддерживать scopes: <code>trade</code> (торговля), <code>withdraw</code> (вывод), <code>info</code> (только чтение). Ключ с scope <code>withdraw</code> требует обязательной привязки к IP-адресу.</li>
+<li><strong>SR-SYS-5 (Аудит):</strong> Все административные действия (изменение лимитов, разморозка) должны логироваться в WORM-хранилище (Write Once Read Many) с гарантией неизменности в течение 5 лет.</li>
+</ul>
+<h3 id="33-nfr-Нефункциональные-требования-с-метриками"><a class="header" href="#33-nfr-Нефункциональные-требования-с-метриками">3.3 NFR (Нефункциональные требования) с метриками</a></h3>
+<ul>
+<li><strong>NFR-1 (Доступность):</strong> Доступность торгового API (матчинг) — <strong>99.99%</strong> в месяц. Доступность интерфейса вывода — <strong>99.95%</strong>.</li>
+<li><strong>NFR-2 (Задержки):</strong> Время подписи транзакции через HSM (аппаратно) — <strong>p99 &lt; 1 секунда</strong>.</li>
+<li><strong>NFR-3 (Безопасность):</strong> Время отклика системы на экстренную блокировку (kill-switch) — <strong>не более 5 секунд</strong> после нажатия администратором.</li>
+<li><strong>NFR-4 (Управление рисками):</strong> Процент ложных срабатываний AML-движка (false positives) — <strong>менее 0.5%</strong> от общего числа транзакций.</li>
+<li><strong>NFR-5 (Масштабируемость):</strong> Система оркестрации кошельков должна выдерживать нагрузку <strong>1000 исходящих транзакций в минуту</strong> (при использовании L2-решений типа Lightning Network или оптимизации batch-транзакций).</li>
+</ul>
+<hr />
+<h2 id="4-Архитектура"><a class="header" href="#4-Архитектура">4. Архитектура</a></h2>
+<h3 id="41-Декомпозиция-компонентов"><a class="header" href="#41-Декомпозиция-компонентов">4.1 Декомпозиция компонентов</a></h3>
+<ol>
+<li><strong>Web UI / Mobile Backend:</strong> Общение с клиентом.</li>
+<li><strong>API Gateway (Kong / Traefik):</strong> Маршрутизация, rate limiting, проверка JWT/API-ключей.</li>
+<li><strong>Matching Engine (Core):</strong> Высокопроизводительный движок ордеров (C++/Rust).</li>
+<li><strong>Account &amp; Ledger Service:</strong> Управление балансами, горячее/холодное хранение.</li>
+<li><strong>Orchestrator (Workflow Engine):</strong> Управляет состоянием заявок на вывод (Temporal / Camunda).</li>
+<li><strong>HSM Adapter (ГОСТ):</strong> Прослойка для связи с КриптоПро HSM или аналогичными решениями.</li>
+<li><strong>AML Risk Engine:</strong> Сервис оценки рисков транзакций.</li>
+<li><strong>KMS (Key Management Service):</strong> Внутренний сервис для управления метаданными ключей (не самими ключами).</li>
+<li><strong>Audit &amp; Forensics:</strong> Elasticsearch с WORM-бакетом для долгого хранения.</li>
+</ol>
+<h3 id="42-Ключевые-архитектурные-решения-adr"><a class="header" href="#42-Ключевые-архитектурные-решения-adr">4.2 Ключевые архитектурные решения (ADR)</a></h3>
+<h4 id="adr-1-Использование-hsm-для-хранения-корневых-ключей"><a class="header" href="#adr-1-Использование-hsm-для-хранения-корневых-ключей">ADR-1: Использование HSM для хранения корневых ключей</a></h4>
+<ul>
+<li><strong>Контекст:</strong> Необходимость соответствия законодательству РФ и защита от взлома серверов.</li>
+<li><strong>Решение:</strong> Все приватные ключи (горячих и холодных кошельков) генерируются и хранятся внутри сертифицированного HSM (КриптоПро). Сервис подписи обращается к HSM через API.</li>
+<li><strong>Trade-off:</strong> Усложнение архитектуры и повышение стоимости инфраструктуры против максимальной защищенности от утечек.</li>
+</ul>
+<h4 id="adr-2-Асинхронная-оркестрация-вывода-saga-pattern"><a class="header" href="#adr-2-Асинхронная-оркестрация-вывода-saga-pattern">ADR-2: Асинхронная оркестрация вывода (Saga Pattern)</a></h4>
+<ul>
+<li><strong>Контекст:</strong> Вывод средств включает множество шагов (блокировка -&gt; проверка -&gt; подпись -&gt; отправка -&gt; подтверждение), которые могут длиться часы.</li>
+<li><strong>Решение:</strong> Использование распределенного оркестратора саг (например, Temporal). Это позволяет переживать перезагрузки сервисов и обеспечивает консистентность данных при сбоях на шаге подписи.</li>
+<li><strong>Trade-off:</strong> Сложность отладки и поддержки стейт-машины против гарантий финишности (completion guarantee) для каждой заявки.</li>
+</ul>
+<h4 id="adr-3-Изоляция-торгового-движка-и-кошельков"><a class="header" href="#adr-3-Изоляция-торгового-движка-и-кошельков">ADR-3: Изоляция торгового движка и кошельков</a></h4>
+<ul>
+<li><strong>Контекст:</strong> Торговый движок требует максимальной производительности, а сервис кошельков — максимальной безопасности.</li>
+<li><strong>Решение:</strong> Физическое разделение: торговый движок работает в "сети обработки данных", а HSM и оркестратор кошельков — в "сети активов". Общение происходит через строго контролируемые очереди сообщений (Kafka/RabbitMQ) с использованием шифрования на уровне приложения.</li>
+</ul>
+<h3 id="43-Технологический-стек-Языки-программирования-и-фреймворки"><a class="header" href="#43-Технологический-стек-Языки-программирования-и-фреймворки">4.3 Технологический стек (Языки программирования и фреймворки)</a></h3>
+<h4 id="backend-Высоконагруженные-сервисы"><a class="header" href="#backend-Высоконагруженные-сервисы">Backend (Высоконагруженные сервисы)</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>Компонент</th><th>Язык / Фреймворк</th><th>Обоснование</th></tr></thead><tbody>
+<tr><td><strong>Торговый движок (Matching Engine)</strong></td><td><strong>Rust</strong> (или C++ для legacy)</td><td>Максимальная производительность, предсказуемая задержка (low latency), memory safety. Использование <code>tokio</code> для асинхронности.</td></tr>
+<tr><td><strong>Оркестратор кошельков (Wallet Orchestrator)</strong></td><td><strong>Go</strong></td><td>Баланс производительности и скорости разработки. <code>Temporal.io</code> для saga-оркестрации.</td></tr>
+<tr><td><strong>API Gateway</strong></td><td><strong>Kong</strong> (Lua) / <strong>Traefik</strong> (Go)</td><td>Готовые плагины для rate limiting, JWT, интеграция с Keycloak.</td></tr>
+<tr><td><strong>Account &amp; Ledger Service</strong></td><td><strong>Java 17+ / Spring Boot</strong></td><td>Стабильность, транзакционность, поддержка ACID, Spring Data JPA + PostgreSQL.</td></tr>
+<tr><td><strong>AML Risk Engine</strong></td><td><strong>Python 3.11+</strong></td><td>Богатая экосистема ML/AI (scikit-learn, pandas), гибкость для правил. <code>FastAPI</code> для REST.</td></tr>
+<tr><td><strong>HSM Adapter (ГОСТ)</strong></td><td><strong>C++ / C#</strong></td><td>Работа с нативными библиотеками КриптоПро, низкоуровневый доступ к HSM.</td></tr>
+<tr><td><strong>KMS / Policy Engine</strong></td><td><strong>Go</strong></td><td>Легковесные микросервисы, высокая конкурентность.</td></tr>
+</tbody></table>
+</div>
+<h4 id="frontend"><a class="header" href="#frontend">Frontend</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>Компонент</th><th>Фреймворк</th><th>Обоснование</th></tr></thead><tbody>
+<tr><td><strong>Клиентский портал (Web)</strong></td><td><strong>React 18 + TypeScript</strong></td><td>Компонентный подход, типобезопасность, экосистема (MUI, Redux Toolkit).</td></tr>
+<tr><td><strong>Административная консоль (Admin)</strong></td><td><strong>React + Ant Design</strong></td><td>Быстрая разработка сложных таблиц, дашбордов.</td></tr>
+<tr><td><strong>Мобильное приложение</strong></td><td><strong>React Native</strong></td><td>Единая codebase для iOS/Android, быстрый вывод на рынок.</td></tr>
+</tbody></table>
+</div>
+<h4 id="data--infrastructure"><a class="header" href="#data--infrastructure">Data &amp; Infrastructure</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>Компонент</th><th>Технология</th><th>Обоснование</th></tr></thead><tbody>
+<tr><td><strong>База данных (OLTP)</strong></td><td><strong>PostgreSQL 15+</strong></td><td>ACID, надежность, поддержка JSONB, паттерн "CQRS" с read replicas.</td></tr>
+<tr><td><strong>Кэш / Сессии</strong></td><td><strong>Redis Cluster</strong></td><td>Высокая производительность, поддержка pub/sub для инвалидации.</td></tr>
+<tr><td><strong>Очереди сообщений</strong></td><td><strong>Apache Kafka</strong></td><td>At-least-once delivery, replayability, горизонтальное масштабирование.</td></tr>
+<tr><td><strong>Оркестрация саг</strong></td><td><strong>Temporal.io</strong></td><td>Долгоживущие workflows, автоматические retry, visibility.</td></tr>
+<tr><td><strong>Мониторинг</strong></td><td><strong>Prometheus + Grafana</strong></td><td>Индустриальный стандарт, метрики в формате OpenMetrics.</td></tr>
+<tr><td><strong>Логи</strong></td><td><strong>ELK Stack (Elasticsearch, Logstash, Kibana)</strong> + <strong>WORM storage</strong></td><td>Поиск и долгосрочное хранение аудита.</td></tr>
+<tr><td><strong>Контейнеризация</strong></td><td><strong>Docker + Kubernetes (Yandex Cloud / Managed K8s)</strong></td><td>Оркестрация, автоматическое масштабирование, изоляция tenant-ов.</td></tr>
+<tr><td><strong>CI/CD</strong></td><td><strong>GitLab CI</strong></td><td>Единый пайплайн, интеграция с Kubernetes, security scanning (SAST/DAST).</td></tr>
+<tr><td><strong>HSM (ГОСТ)</strong></td><td><strong>КриптоПро HSM / ViPNet HSM</strong></td><td>Сертификация ФСБ, аппаратная защита ключей, поддержка ГОСТ Р 34.10-2021.</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="5-Интерфейсы-api"><a class="header" href="#5-Интерфейсы-api">5. Интерфейсы (API)</a></h2>
+<h3 id="51-Контракт-post-apiv2withdraw-для-трейдера"><a class="header" href="#51-Контракт-post-apiv2withdraw-для-трейдера">5.1 Контракт: POST /api/v2/withdraw (для трейдера)</a></h3>
+<p><strong>Заголовки:</strong></p>
+<ul>
+<li><code>Authorization: Api-Key &lt;key&gt;</code></li>
+<li><code>X-Signature: &lt;HMAC-SHA512(body + timestamp)&gt;</code></li>
+<li><code>X-Timestamp: &lt;unix_time&gt;</code></li>
+</ul>
+<p><strong>Запрос:</strong></p>
+<pre><code class="language-json">{
+  "currency": "BTC",
+  "address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+  "amount": "0.5",
+  "network": "BTC",
+  "twofa_code": "123456"
+}
+</code></pre>
+<p><strong>Ответ (202 Accepted):</strong></p>
+<pre><code class="language-json">{
+  "withdrawal_id": "wd-123e4567-e89b-12d3-a456-426614174000",
+  "status": "pending_aml_check",
+  "estimated_finish_time": "2023-10-27T10:30:00Z"
+}
+</code></pre>
+<h3 id="52-Внутреннее-событие-transactionsignedevent"><a class="header" href="#52-Внутреннее-событие-transactionsignedevent">5.2 Внутреннее событие: <code>TransactionSignedEvent</code></a></h3>
+<p><strong>Назначение:</strong> Оповещение Ledger-сервиса о списании средств после успешной отправки в сеть.
+<strong>Схема:</strong></p>
+<pre><code class="language-json">{
+  "event_id": "evt-123",
+  "withdrawal_id": "wd-...",
+  "tx_hash": "0x123...abc",
+  "signed_at": "2023-10-27T10:25:00Z",
+  "signer": "hsm-cluster-01",
+  "signature_type": "ГОСТ Р 34.10-2021"
+}
+</code></pre>
+<hr />
+<h2 id="6-Реестр-рисков-Криптобиржа"><a class="header" href="#6-Реестр-рисков-Криптобиржа">6. Реестр рисков (Криптобиржа)</a></h2>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">ID</th><th style="text-align: left">Риск</th><th style="text-align: left">Вероятность</th><th style="text-align: left">Влияние</th><th style="text-align: left">Меры предотвращения</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong>R-01</strong></td><td style="text-align: left"><strong>Утечка ключей горячего кошелька</strong></td><td style="text-align: left">Низкая</td><td style="text-align: left">Критическое</td><td style="text-align: left">Использование HSM, ротация ключей каждые 24 часа, автоматическая отправка излишков в холодное хранилище.</td></tr>
+<tr><td style="text-align: left"><strong>R-02</strong></td><td style="text-align: left"><strong>51% атака на сеть блокчейна (для PoW)</strong></td><td style="text-align: left">Средняя</td><td style="text-align: left">Высокое</td><td style="text-align: left">Ожидание увеличенного количества подтверждений (confirmations) для крупных депозитов. Использование нескольких надежных нод.</td></tr>
+<tr><td style="text-align: left"><strong>R-03</strong></td><td style="text-align: left"><strong>Ошибка оркестратора (дублирование отправки)</strong></td><td style="text-align: left">Низкая</td><td style="text-align: left">Высокое</td><td style="text-align: left">Идемпотентность операций (проверка <code>tx_hash</code> в блокчейне перед отправкой), строгий стейт-менеджмент.</td></tr>
+<tr><td style="text-align: left"><strong>R-04</strong></td><td style="text-align: left"><strong>Заморозка средств регулятором</strong></td><td style="text-align: left">Средняя</td><td style="text-align: left">Среднее</td><td style="text-align: left">Наличие юридической структуры, позволяющей взаимодействовать с запросами, автоматизация формирования отчетности (115-ФЗ).</td></tr>
+<tr><td style="text-align: left"><strong>R-05</strong></td><td style="text-align: left"><strong>Атака на API-ключи трейдера</strong></td><td style="text-align: left">Средняя</td><td style="text-align: left">Среднее</td><td style="text-align: left">Обязательная привязка IP для ключей с правами на вывод, обязательное использование 2FA для создания ключей.</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="7-validation--verification-vv--Тестовые-сценарии"><a class="header" href="#7-validation--verification-vv--Тестовые-сценарии">7. Validation &amp; Verification (V&amp;V) / Тестовые сценарии</a></h2>
+<h3 id="tc-01-Вывод-криптовалюты-low-risk-автоматический"><a class="header" href="#tc-01-Вывод-криптовалюты-low-risk-автоматический">TC-01: Вывод криптовалюты low-risk (автоматический)</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Атрибут</th><th>Значение</th></tr></thead><tbody>
+<tr><td><strong>ID</strong></td><td>TC-WD-001</td></tr>
+<tr><td><strong>Название</strong></td><td>Автоматический вывод low-risk суммы</td></tr>
+<tr><td><strong>Предусловия</strong></td><td>Клиент с KYC <code>VERIFIED</code>, risk score <code>LOW</code>, баланс &gt; 0.01 BTC, 2FA включена</td></tr>
+<tr><td><strong>Шаги</strong></td><td>1. Клиент инициирует вывод 0.01 BTC на валидный адрес<br>2. Система выполняет AML-скоринг (адрес не в черном списке)<br>3. Подпись транзакции через HSM (КриптоПро)<br>4. Отправка в сеть Bitcoin<br>5. Мониторинг подтверждений</td></tr>
+<tr><td><strong>Ожидаемый результат</strong></td><td>Статус: <code>completed</code> в течение 2 минут, транзакция в блокчейн-эксплорере, Audit event <code>withdraw.signed.hsm</code></td></tr>
+<tr><td><strong>Постусловия</strong></td><td>Баланс клиента уменьшен на 0.01 BTC + комиссия</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h3 id="tc-02-Блокировка-вывода-по-aml-санкционный-адрес"><a class="header" href="#tc-02-Блокировка-вывода-по-aml-санкционный-адрес">TC-02: Блокировка вывода по AML (санкционный адрес)</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Атрибут</th><th>Значение</th></tr></thead><tbody>
+<tr><td><strong>ID</strong></td><td>TC-AML-001</td></tr>
+<tr><td><strong>Название</strong></td><td>Блокировка вывода на санкционный адрес</td></tr>
+<tr><td><strong>Предусловия</strong></td><td>Клиент с KYC <code>VERIFIED</code>, баланс достаточен</td></tr>
+<tr><td><strong>Шаги</strong></td><td>1. Клиент запрашивает вывод на адрес из списка OFAC/SDN<br>2. AML Engine детектирует совпадение<br>3. Заявка переводится в статус <code>blocked_aml</code><br>4. Compliance-офицер видит алерт в очереди</td></tr>
+<tr><td><strong>Ожидаемый результат</strong></td><td>Вывод не отправлен в сеть, статус <code>blocked_aml</code>, в SIEM отправлено событие <code>aml.alert.high</code></td></tr>
+<tr><td><strong>Постусловия</strong></td><td>Средства не списаны, алерт в админке ожидает ручного решения</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h3 id="tc-03-Мультиподпись-для-вывода-из-холодного-кошелька"><a class="header" href="#tc-03-Мультиподпись-для-вывода-из-холодного-кошелька">TC-03: Мультиподпись для вывода из холодного кошелька</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Атрибут</th><th>Значение</th></tr></thead><tbody>
+<tr><td><strong>ID</strong></td><td>TC-CLD-001</td></tr>
+<tr><td><strong>Название</strong></td><td>M-of-N мультиподпись для cold storage</td></tr>
+<tr><td><strong>Предусловия</strong></td><td>Казначей (User A) инициирует вывод 10 BTC из <code>cold_wallet_01</code></td></tr>
+<tr><td><strong>Шаги</strong></td><td>1. User A создает запрос на вывод cold wallet<br>2. Система создает multisig-запрос, статус <code>pending_approval</code><br>3. User B (второй казначей) подтверждает в админке<br>4. HSM собирает подписи (2 из 3)<br>5. Транзакция отправлена</td></tr>
+<tr><td><strong>Ожидаемый результат</strong></td><td>Транзакция отправлена только после подтверждения User B, в Audit Log записаны оба approvals</td></tr>
+<tr><td><strong>Постусловия</strong></td><td>Cold wallet баланс уменьшен, hot wallet пополнен</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h3 id="tc-04-Отказ-hsm-деградация"><a class="header" href="#tc-04-Отказ-hsm-деградация">TC-04: Отказ HSM (деградация)</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Атрибут</th><th>Значение</th></tr></thead><tbody>
+<tr><td><strong>ID</strong></td><td>TC-FAIL-001</td></tr>
+<tr><td><strong>Название</strong></td><td>Поведение системы при недоступности HSM</td></tr>
+<tr><td><strong>Предусловия</strong></td><td>HSM Cluster эмулируется как недоступный</td></tr>
+<tr><td><strong>Шаги</strong></td><td>1. Клиент инициирует вывод<br>2. Оркестратор пытается обратиться к HSM<br>3. Получает timeout/error<br>4. Статус заявки: <code>pending_hsm</code><br>5. HSM восстанавливается через 10 мин<br>6. Система автоматически retry</td></tr>
+<tr><td><strong>Ожидаемый результат</strong></td><td>Заявка не теряется, после восстановления HSM процесс завершается успешно, нет программной генерации ключей</td></tr>
+<tr><td><strong>Постусловия</strong></td><td>В логах записаны retry attempts, алерт в мониторинг</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h3 id="tc-05-api-ключ-с-правами-на-вывод-без-ip-привязки"><a class="header" href="#tc-05-api-ключ-с-правами-на-вывод-без-ip-привязки">TC-05: API-ключ с правами на вывод (без IP-привязки)</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Атрибут</th><th>Значение</th></tr></thead><tbody>
+<tr><td><strong>ID</strong></td><td>TC-API-001</td></tr>
+<tr><td><strong>Название</strong></td><td>Отклонение API-ключа с правами на вывод без IP whitelist</td></tr>
+<tr><td><strong>Предусловия</strong></td><td>Клиент аутентифицирован, 2FA пройдена</td></tr>
+<tr><td><strong>Шаги</strong></td><td>1. Клиент создает API-ключ с scope <code>withdraw</code><br>2. Система требует обязательную IP whitelist<br>3. Клиент не заполняет IP-адреса<br>4. Система отклоняет создание ключа</td></tr>
+<tr><td><strong>Ожидаемый результат</strong></td><td>Ошибка 422: <code>ip_whitelist_required_for_withdraw_scope</code>, ключ не создан</td></tr>
+<tr><td><strong>Постусловия</strong></td><td>Audit event <code>api_key.creation.failed</code></td></tr>
+</tbody></table>
+</div>
+<hr />
+<h3 id="tc-06-Аварийная-блокировка-kill-switch"><a class="header" href="#tc-06-Аварийная-блокировка-kill-switch">TC-06: Аварийная блокировка (Kill Switch)</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Атрибут</th><th>Значение</th></tr></thead><tbody>
+<tr><td><strong>ID</strong></td><td>TC-SEC-001</td></tr>
+<tr><td><strong>Название</strong></td><td>Экстренная блокировка всех выводов по сигналу SecOps</td></tr>
+<tr><td><strong>Предусловия</strong></td><td>Обнаружен инцидент безопасности</td></tr>
+<tr><td><strong>Шаги</strong></td><td>1. SecOps нажимает "Emergency Freeze All" в админке<br>2. Система переводит все pending заявки в <code>frozen</code><br>3. API Gateway начинает возвращать 503 для withdrawal endpoints<br>4. Новые заявки на вывод блокируются<br>5. SecOps снимает freeze через 2 часа</td></tr>
+<tr><td><strong>Ожидаемый результат</strong></td><td>В течение 5 секунд после нажатия ни одна новая заявка не принимается, активные заявки приостановлены</td></tr>
+<tr><td><strong>Постусловия</strong></td><td>Audit log содержит запись о freeze/unfreeze с user_id</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h3 id="tc-07-Нагрузочное-тестирование-performance"><a class="header" href="#tc-07-Нагрузочное-тестирование-performance">TC-07: Нагрузочное тестирование (Performance)</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Атрибут</th><th>Значение</th></tr></thead><tbody>
+<tr><td><strong>ID</strong></td><td>TC-PERF-001</td></tr>
+<tr><td><strong>Название</strong></td><td>Пиковая нагрузка торгового API</td></tr>
+<tr><td><strong>Предусловия</strong></td><td>Тестовая среда с конфигурацией, аналогичной production</td></tr>
+<tr><td><strong>Шаги</strong></td><td>1. Запуск 1000 concurrent virtual users<br>2. Каждый отправляет 1000 ордеров/сек (REST + WebSocket)<br>3. Длительность теста: 30 мин</td></tr>
+<tr><td><strong>Ожидаемый результат</strong></td><td>Latency p99 &lt; 10 мс для REST, &lt; 5 мс для WebSocket, error rate &lt; 0.01%, CPU на matching engine &lt; 70%</td></tr>
+<tr><td><strong>Постусловия</strong></td><td>Отчет о capacity planning, рекомендации по масштабированию</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h3 id="tc-08-Ротация-мастер-ключа-hsm"><a class="header" href="#tc-08-Ротация-мастер-ключа-hsm">TC-08: Ротация мастер-ключа HSM</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Атрибут</th><th>Значение</th></tr></thead><tbody>
+<tr><td><strong>ID</strong></td><td>TC-KMS-001</td></tr>
+<tr><td><strong>Название</strong></td><td>Плановая ротация мастер-ключа в HSM</td></tr>
+<tr><td><strong>Предусловия</strong></td><td>2 сотрудника SecOps аутентифицированы, HSM в режиме maintenance</td></tr>
+<tr><td><strong>Шаги</strong></td><td>1. SecOps-1 инициирует ротацию в админке<br>2. SecOps-2 подтверждает запрос (dual control)<br>3. HSM генерирует новый мастер-ключ<br>4. Система перешифровывает все активные кошельки новым ключом<br>5. Старый ключ архивируется в HSM backup</td></tr>
+<tr><td><strong>Ожидаемый результат</strong></td><td>Все операции подписи продолжают работать без downtime, в Audit Log записаны оба approvals</td></tr>
+<tr><td><strong>Постусловия</strong></td><td>Новый ключ активен, старый сохранен в соответствии с retention policy</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h3 id="tc-09-Восстановление-после-сбоя-БД-rporto"><a class="header" href="#tc-09-Восстановление-после-сбоя-БД-rporto">TC-09: Восстановление после сбоя БД (RPO/RTO)</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Атрибут</th><th>Значение</th></tr></thead><tbody>
+<tr><td><strong>ID</strong></td><td>TC-DR-001</td></tr>
+<tr><td><strong>Название</strong></td><td>Аварийное восстановление PostgreSQL</td></tr>
+<tr><td><strong>Предусловия</strong></td><td>Симулированное падение master-ноды PostgreSQL</td></tr>
+<tr><td><strong>Шаги</strong></td><td>1. Master БД становится недоступным<br>2. Patroni автоматически промоутит replica<br>3. Приложения переподключаются через новый endpoint<br>4. Измерение времени восстановления</td></tr>
+<tr><td><strong>Ожидаемый результат</strong></td><td>RTO &lt; 15 минут (автоматический фейловер), RPO &lt; 1 минута (синхронная репликация), потеряно не более 1 минуты данных</td></tr>
+<tr><td><strong>Постусловия</strong></td><td>Отчет о DR-упражнении, обновление runbook</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h3 id="tc-10-Интеграционное-тестирование-с-КриптоПро-hsm"><a class="header" href="#tc-10-Интеграционное-тестирование-с-КриптоПро-hsm">TC-10: Интеграционное тестирование с КриптоПро HSM</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Атрибут</th><th>Значение</th></tr></thead><tbody>
+<tr><td><strong>ID</strong></td><td>TC-HSM-001</td></tr>
+<tr><td><strong>Название</strong></td><td>Подпись транзакции через КриптоПро HSM</td></tr>
+<tr><td><strong>Предусловия</strong></td><td>HSM инициализирован, ключи загружены, сертификаты валидны</td></tr>
+<tr><td><strong>Шаги</strong></td><td>1. Оркестратор формирует raw transaction (Ethereum)<br>2. Вычисляет хэш (keccak256)<br>3. Отправляет запрос на подпись в HSM по PKCS#11<br>4. HSM возвращает подпись (ECDSA с ГОСТ)<br>5. Транзакция собирается и отправляется в сеть</td></tr>
+<tr><td><strong>Ожидаемый результат</strong></td><td>Подпись валидна, транзакция принимается блокчейн-нодой, время подписи &lt; 500 мс</td></tr>
+<tr><td><strong>Постусловия</strong></td><td>В логах зафиксирован <code>signature.hsm.success</code> с идентификатором ключа</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h3 id="Матрица-трассируемости-требований-и-тест-кейсов"><a class="header" href="#Матрица-трассируемости-требований-и-тест-кейсов">Матрица трассируемости требований и тест-кейсов</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Требование</th><th>TC-01</th><th>TC-02</th><th>TC-03</th><th>TC-04</th><th>TC-05</th><th>TC-06</th><th>TC-07</th><th>TC-08</th><th>TC-09</th><th>TC-10</th></tr></thead><tbody>
+<tr><td>SR-SH-1 (Скорость вывода)</td><td>✓</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>SR-SH-2 (API для MM)</td><td></td><td></td><td></td><td></td><td>✓</td><td></td><td>✓</td><td></td><td></td><td></td></tr>
+<tr><td>SR-SH-3 (Compliance freeze)</td><td></td><td>✓</td><td></td><td></td><td></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+<tr><td>SR-SH-4 (Мультиподпись)</td><td></td><td></td><td>✓</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>SR-SH-5 (HSM)</td><td>✓</td><td></td><td></td><td>✓</td><td></td><td></td><td></td><td>✓</td><td></td><td>✓</td></tr>
+<tr><td>SR-SH-6 (Аудит)</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td></td><td>✓</td><td>✓</td><td>✓</td></tr>
+<tr><td>SR-SH-7 (HA)</td><td></td><td></td><td></td><td></td><td></td><td></td><td>✓</td><td></td><td>✓</td><td></td></tr>
+<tr><td>NFR-1 (99.99% доступность)</td><td></td><td></td><td></td><td></td><td></td><td></td><td>✓</td><td></td><td>✓</td><td></td></tr>
+<tr><td>NFR-2 (Latency подписи)</td><td>✓</td><td></td><td></td><td></td><td></td><td></td><td>✓</td><td></td><td></td><td>✓</td></tr>
+<tr><td>NFR-3 (Kill switch)</td><td></td><td></td><td></td><td></td><td></td><td>✓</td><td></td><td></td><td></td><td></td></tr>
+</tbody></table>
+</div>
+<hr />
+
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
