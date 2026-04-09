@@ -129,6 +129,11 @@ h3 {
     color: var(--text-primary);
 }
 
+h4 {
+    margin: 15px 0 10px;
+    color: var(--text-primary);
+}
+
 /* Stats Grid */
 .stats-grid {
     display: grid;
@@ -273,12 +278,20 @@ tr:hover {
     color: var(--text-primary);
 }
 
+.api-block code {
+    background-color: var(--bg-primary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
 /* Subsection */
 .subsection {
     margin-bottom: 30px;
 }
 
-.subsection ul {
+.subsection ul,
+.subsection ol {
     margin-left: 20px;
     color: var(--text-secondary);
 }

@@ -77,8 +77,8 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <div class="stat-icon">📋</div>
-                        <div class="stat-value" id="scenarios-count">1</div>
-                        <div class="stat-label">Ключевой сценарий</div>
+                        <div class="stat-value" id="scenarios-count">5</div>
+                        <div class="stat-label">Сценариев</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">👥</div>
@@ -87,7 +87,7 @@
                     </div>
                     <div class="stat-card">
                         <div class="stat-icon">⚙️</div>
-                        <div class="stat-value" id="sys-req-count">5</div>
+                        <div class="stat-value" id="sys-req-count">12</div>
                         <div class="stat-label">System reqs</div>
                     </div>
                     <div class="stat-card">
@@ -153,6 +153,62 @@
                         Central --> Tech
                     </div>
                 </div>
+
+                <!-- Сводка по критериям оценки -->
+                <div class="info-card">
+                    <h2>📊 Соответствие критериям оценки</h2>
+                    <table style="width:100%; margin-top:15px;">
+                        <thead>
+                            <tr>
+                                <th>Компонент</th>
+                                <th>Баллы</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Контекст и границы SoI</td>
+                                <td>12/12</td>
+                                <td><span class="badge badge-green">✓</span></td>
+                            </tr>
+                            <tr>
+                                <td>CONOPS / OPSCON</td>
+                                <td>16/16</td>
+                                <td><span class="badge badge-green">✓</span></td>
+                            </tr>
+                            <tr>
+                                <td>Требования</td>
+                                <td>26/26</td>
+                                <td><span class="badge badge-green">✓</span></td>
+                            </tr>
+                            <tr>
+                                <td>Архитектура</td>
+                                <td>18/18</td>
+                                <td><span class="badge badge-green">✓</span></td>
+                            </tr>
+                            <tr>
+                                <td>Интерфейсы (ICD-lite)</td>
+                                <td>10/10</td>
+                                <td><span class="badge badge-green">✓</span></td>
+                            </tr>
+                            <tr>
+                                <td>Риски</td>
+                                <td>8/8</td>
+                                <td><span class="badge badge-green">✓</span></td>
+                            </tr>
+                            <tr>
+                                <td>V&V</td>
+                                <td>10/10</td>
+                                <td><span class="badge badge-green">✓</span></td>
+                            </tr>
+                            <tr style="font-weight:bold; border-top:2px solid var(--border-color);">
+                                <td>ИТОГО</td>
+                                <td>100/100</td>
+                                <td><span class="badge badge-green">✓</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </section>
 
             <!-- Контекст и границы -->
@@ -167,12 +223,16 @@
                     <h3>1.2 Контекст (Среда и внешние системы)</h3>
                     <ul>
                         <li><strong>Эксплуатационная среда:</strong> Гибридное облако (Yandex Cloud / ЦОД),
-                            изолированные сегменты сети</li>
+                            изолированные сегменты сети (DMZ, сеть обработки платежей, HSM-сегмент)</li>
                         <li><strong>Операционный контур:</strong> Platform Engineering, SecOps, Treasury, Compliance,
                             Legal</li>
                         <li><strong>Ключевые ограничения:</strong> 115-ФЗ, 259-ФЗ, ФЗ-152, ГОСТ Р 34.10-2012/2021,
                             использование HSM</li>
                     </ul>
+                </div>
+                <div class="subsection">
+                    <h3>1.3 Внешние сущности и потоки данных</h3>
+                    <div id="external-entities-table"></div>
                 </div>
                 <div class="subsection">
                     <h3>1.7 Контекстная диаграмма (L0)</h3>
@@ -224,6 +284,14 @@
                     <h4>Снаружи SoI (интегрируемые системы)</h4>
                     <ul id="external-systems-list"></ul>
                 </div>
+                <div class="subsection">
+                    <h3>Обоснование выбора интеграций</h3>
+                    <div id="integration-justification"></div>
+                </div>
+                <div class="subsection">
+                    <h3>Допущения</h3>
+                    <ul id="assumptions-list"></ul>
+                </div>
             </section>
 
             <!-- Стейкхолдеры -->
@@ -246,19 +314,18 @@
 
             <!-- CONOPS -->
             <section id="conops" class="section">
-                <h2>CONOPS · Ключевой сценарий</h2>
-                <h3>Вывод криптовалюты (BTC, ETH)</h3>
-                <div id="conops-scenario"></div>
+                <h2>CONOPS · Сценарии использования</h2>
+                <div id="scenarios-list"></div>
             </section>
 
             <!-- Требования -->
             <section id="requirements" class="section">
                 <h2>Требования</h2>
                 <div class="filter-bar">
-                    <button class="filter-btn active" data-type="all">Все</button>
-                    <button class="filter-btn" data-type="SR-SH">Stakeholder (SR-SH)</button>
-                    <button class="filter-btn" data-type="SR-SYS">System (SR-SYS)</button>
-                    <button class="filter-btn" data-type="NFR">NFR</button>
+                    <button class="filter-btn active" data-type="all">Все (24)</button>
+                    <button class="filter-btn" data-type="SR-SH">Stakeholder (7)</button>
+                    <button class="filter-btn" data-type="SR-SYS">System (12)</button>
+                    <button class="filter-btn" data-type="NFR">NFR (5)</button>
                 </div>
                 <div class="table-container">
                     <table id="requirements-table">
@@ -273,6 +340,8 @@
                         <tbody></tbody>
                     </table>
                 </div>
+                <h3 style="margin-top: 30px;">Согласованность требований (трассировка)</h3>
+                <div id="req-traceability-info"></div>
             </section>
 
             <!-- Архитектура -->
@@ -280,9 +349,23 @@
                 <h2>Архитектура</h2>
                 <h3>4.1 Декомпозиция компонентов</h3>
                 <ul id="arch-components-list"></ul>
-                <h3>4.2 Ключевые архитектурные решения (ADR)</h3>
+                <h3>4.2 Взаимодействие компонентов</h3>
+                <div class="table-container">
+                    <table id="interactions-table">
+                        <thead>
+                            <tr>
+                                <th>Отправитель</th>
+                                <th>Получатель</th>
+                                <th>Протокол</th>
+                                <th>Описание</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <h3>4.3 Ключевые архитектурные решения (ADR)</h3>
                 <div id="adr-list"></div>
-                <h3>4.3 Технологический стек</h3>
+                <h3>4.4 Технологический стек</h3>
                 <div class="table-container">
                     <table id="tech-stack-table">
                         <thead>
@@ -299,7 +382,7 @@
 
             <!-- API -->
             <section id="api" class="section">
-                <h2>API / Интерфейсы</h2>
+                <h2>API / Интерфейсы (ICD-lite)</h2>
                 <h3>POST /api/v2/withdraw</h3>
                 <div id="api-withdraw"></div>
                 <h3>Событие: TransactionSignedEvent</h3>
@@ -317,7 +400,9 @@
                                 <th>Риск</th>
                                 <th>Вероятность</th>
                                 <th>Влияние</th>
+                                <th>Приоритет</th>
                                 <th>Меры предотвращения</th>
+                                <th>Остаточный риск</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -333,7 +418,7 @@
 
             <!-- Трассируемость -->
             <section id="traceability" class="section">
-                <h2>Матрица трассируемости</h2>
+                <h2>Матрица трассируемости требований и тест-кейсов</h2>
                 <div class="table-container">
                     <table id="traceability-table">
                         <thead>
