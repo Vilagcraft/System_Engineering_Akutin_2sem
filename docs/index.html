@@ -188,48 +188,57 @@
                     <div id="external-entities-table"></div>
                 </div>
                 <div class="subsection">
-                    <h3>1.7 Контекстная диаграмма (L0)</h3>
-                    <div class="mermaid" id="context-diagram-full">
-                        graph TB
-                            subgraph Users["👥 ПОЛЬЗОВАТЕЛИ И ПАРТНЕРЫ"]
-                                Trader["Трейдер (розничный/корпоративный)"]
-                                MM["Маркет-мейкер"]
-                            end
-                            subgraph InternalRoles["👔 ВНУТРЕННИЕ РОЛИ"]
-                                Compliance["Compliance-офицер (AML/CFT)"]
-                                Treasury["Казначей (Treasury)"]
-                                SecOps["SecOps (Security Operations)"]
-                            end
-                            subgraph ExternalSystems["🏛️ ВНЕШНИЕ ОРГАНЫ"]
-                                Gov["Государственные органы (ФНС, Росфинмониторинг)"]
-                            end
-                            subgraph TechInfra["⚙️ ТЕХНИЧЕСКАЯ ИНФРАСТРУКТУРА"]
-                                HSM["HSM Cluster (КриптоПро)"]
-                                Blockchain["Блокчейн-ноды (BTC/ETH/TRON)"]
-                                Banks["Банки-эквайеры / Платежные системы"]
-                            end
-                            Central["🎯 RocketSpot Core Platform"]
+    <h3>1.7 Контекстная диаграмма (L0)</h3>
+    <div class="diagram-container">
+        <div class="mermaid">
+graph TB
+    subgraph Users["ПОЛЬЗОВАТЕЛИ И ПАРТНЕРЫ"]
+        Trader["Трейдер розничный/корпоративный"]
+        MM["Маркет-мейкер"]
+    end
 
-                            Trader -->|"Заявка на вывод, API-ключи"| Central
-                            Central -->|"Статус вывода, История транзакций"| Trader
-                            MM -->|"Высокочастотные ордера"| Central
-                            Central -->|"Рыночные данные"| MM
-                            Compliance -->|"Установка лимитов, Заморозка средств"| Central
-                            Central -->|"Алерты AML, Отчеты"| Compliance
-                            Treasury -->|"Пополнение hot wallet, Мультиподпись"| Central
-                            Central -->|"Статусы резервов"| Treasury
-                            SecOps -->|"Ротация ключей, Emergency revoke"| Central
-                            Central -->|"Алерты безопасности"| SecOps
-                            Gov -->|"Запросы отчетности"| Central
-                            Central -->|"Отчеты по 115-ФЗ"| Gov
-                            Central -->|"Запрос на подпись"| HSM
-                            HSM -->|"Подписанные хэши"| Central
-                            Central -->|"Broadcast транзакций"| Blockchain
-                            Blockchain -->|"Подтверждения"| Central
-                            Banks -->|"Фиатные депозиты"| Central
-                            Central -->|"Запросы на выплату"| Banks
-                    </div>
-                </div>
+    subgraph InternalRoles["ВНУТРЕННИЕ РОЛИ"]
+        Compliance["Compliance-офицер AML/CFT"]
+        Treasury["Казначей Treasury"]
+        SecOps["SecOps"]
+    end
+
+    subgraph ExternalSystems["ВНЕШНИЕ ОРГАНЫ"]
+        Gov["Госорганы ФНС, Росфинмониторинг"]
+    end
+
+    subgraph TechInfra["ТЕХНИЧЕСКАЯ ИНФРАСТРУКТУРА"]
+        HSM["HSM Cluster КриптоПро"]
+        Blockchain["Блокчейн-ноды BTC/ETH/TRON"]
+        Banks["Платежные системы"]
+    end
+
+    Central["🎯 RocketSpot Core Platform"]
+
+    Trader -->|"Заявка на вывод"| Central
+    Central -->|"Статус вывода"| Trader
+    MM -->|"Ордера"| Central
+    Central -->|"Рыночные данные"| MM
+    Compliance -->|"Лимиты, заморозка"| Central
+    Central -->|"Алерты AML"| Compliance
+    Treasury -->|"Пополнение, мультиподпись"| Central
+    Central -->|"Статусы резервов"| Treasury
+    SecOps -->|"Ротация ключей"| Central
+    Central -->|"Алерты"| SecOps
+    Gov -->|"Запросы"| Central
+    Central -->|"Отчеты 115-ФЗ"| Gov
+    Central -->|"Запрос на подпись"| HSM
+    HSM -->|"Подпись"| Central
+    Central -->|"Broadcast"| Blockchain
+    Blockchain -->|"Подтверждения"| Central
+    Banks -->|"Депозиты"| Central
+    Central -->|"Выплаты"| Banks
+
+    classDef centralStyle fill:#1f6feb,stroke:#c9d1d9,stroke-width:2px,color:#fff
+    class Central centralStyle
+        </div>
+    </div>
+</div>
                 <div class="subsection">
                     <h3>1.8 Границы SoI</h3>
                     <h4>Внутри SoI (разрабатываемые компоненты)</h4>
