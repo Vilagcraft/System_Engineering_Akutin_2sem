@@ -7,7 +7,7 @@
 
 ## 📖 Что вы найдёте здесь?
 
-- **1 работа** - https://github.com/Vilagcraft/System_Engineering_Akutin_2sem/blob/main/src/task_1.md
+- **1 работа** - https://vilagcraft.github.io/System_Engineering_Akutin_2sem/
 - **2 работа** - https://github.com/Vilagcraft/System_Engineering_Akutin_2sem/blob/main/src/2%20%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0%20RocketSpot.pdf
 - **Контекст и границы системы** — кто взаимодействует с биржей и какие компоненты мы разрабатываем.
 - **CONOPS / OPSCON** — как система работает: роли, сценарии вывода криптовалюты, деградации.
