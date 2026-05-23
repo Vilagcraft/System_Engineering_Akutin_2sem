@@ -1,344 +1,190 @@
 // ============================================
-// ЛОГИКА ВИЗУАЛИЗАЦИИ ROCKETSPOT (ИСПРАВЛЕННАЯ)
+// ПОЛНОСТЬЮ РАБОТАЮЩАЯ ЛОГИКА (С НАВИГАЦИЕЙ)
 // ============================================
 
 // Навигация
-document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', () => {
-        const sectionId = item.dataset.section;
-        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-        item.classList.add('active');
-        document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
-        document.getElementById(sectionId).classList.add('active');
-    });
-});
-
-// Функция рендеринга требований с фильтрацией
-function renderRequirements(filterType) {
-    const reqTbody = document.querySelector('#requirements-table tbody');
-    if (!reqTbody) return;
-    reqTbody.innerHTML = '';
-    const filteredReqs = filterType === 'all' ? requirements : requirements.filter(r => r.type === filterType);
-    filteredReqs.forEach(r => {
-        const tr = document.createElement('tr');
-        let typeBadge = '';
-        if (r.type === 'SR-SH') typeBadge = '<span class="badge badge-blue">Stakeholder</span>';
-        else if (r.type === 'SR-SYS') typeBadge = '<span class="badge badge-green">System</span>';
-        else if (r.type === 'NFR') typeBadge = '<span class="badge badge-yellow">NFR</span>';
-        tr.innerHTML = `<td><strong>${r.id}</strong></td><td>${typeBadge}</td><td>${r.description}</td><td>${r.metric}</td>`;
-        reqTbody.appendChild(tr);
+function initNavigation() {
+    const navItems = document.querySelectorAll('.nav-item');
+    if (!navItems.length) return;
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const sectionId = item.dataset.section;
+            if (!sectionId) return;
+            navItems.forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+            document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) targetSection.classList.add('active');
+        });
     });
 }
 
-// Рендер глоссария
-function renderGlossary() {
-    const tbody = document.querySelector('#glossary-table tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    glossary.forEach(g => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td><strong>${g.term}</strong></td><td>${g.def}</td>`;
-        tbody.appendChild(tr);
-    });
-}
-
-// Матрица ответственности
-function renderResponsibilityMatrix() {
-    const tbody = document.querySelector('#responsibility-matrix tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    responsibilityMatrix.forEach(r => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${r.area}</td><td>${r.platformEng}</td><td>${r.devops}</td>`;
-        tbody.appendChild(tr);
-    });
-}
-
-// Acceptance Criteria
-function renderAcceptanceCriteria() {
-    const div = document.getElementById('acceptance-criteria');
-    if (!div) return;
-    let html = '<ul>';
-    acceptanceCriteria.forEach(ac => {
-        html += `<li><strong>${ac.req}:</strong> ${ac.criteria}</li>`;
-    });
-    html += '</ul>';
-    div.innerHTML = html;
-}
-
-// Матрица верификации
-function renderVerificationMatrix() {
-    const tbody = document.querySelector('#verification-matrix tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    verificationMatrix.forEach(vm => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${vm.requirement}</td><td>${vm.method}</td><td>${vm.artifact}</td>`;
-        tbody.appendChild(tr);
-    });
-}
-
-// Дашборд статистика
-function renderDashboardStats() {
-    const statsDiv = document.getElementById('dashboard-stats');
-    if (!statsDiv) return;
-    statsDiv.innerHTML = `
-        <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value">5</div><div class="stat-label">Сценариев</div></div>
-        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">7</div><div class="stat-label">Stakeholder reqs</div></div>
-        <div class="stat-card"><div class="stat-icon">⚙️</div><div class="stat-value">12</div><div class="stat-label">System reqs</div></div>
-        <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value">5</div><div class="stat-label">NFR</div></div>
-        <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value">5</div><div class="stat-label">Рисков</div></div>
-        <div class="stat-card"><div class="stat-icon">🧪</div><div class="stat-value">10</div><div class="stat-label">Тест-кейсов</div></div>
+// Функции рендеринга для каждой секции
+function renderContext() {
+    const container = document.getElementById('context-content');
+    if (!container) return;
+    container.innerHTML = `
+        <div class="subsection"><h3>1.1 Цель</h3><p>Высоконадёжная (≥99.95%) криптобиржа, соответствующая 115-ФЗ, ГОСТ Р 34.10-2021.</p></div>
+        <div class="subsection"><h3>1.2 Среда</h3><ul><li>Гибридное облако + on-premise ЦОД</li><li>Операционный контур: Platform Engineering, DevOps, SecOps, Treasury, Compliance</li></ul></div>
+        <div class="subsection"><h3>1.3 Внешние сущности</h3><div class="table-container"><table><thead><tr><th>Сущность</th><th>Вход</th><th>Выход</th></tr></thead><tbody>${externalEntities.map(e => `<tr><td><strong>${e.entity}</strong></td><td>${e.input}</td><td>${e.output}</td></tr>`).join('')}</tbody></table></div></div>
+        <div class="subsection"><h3>1.4 Границы SoI</h3><h4>Внутри</h4><ul>${soiComponents.map(c => `<li>${c}</li>`).join('')}</ul><h4>Снаружи</h4><ul>${externalSystems.map(s => `<li>${s}</li>`).join('')}</ul></div>
+        <div class="subsection"><h3>1.5 Обоснование интеграций</h3>${integrationJustification.map(j => `<p><strong>${j.system}:</strong> ${j.justification}</p>`).join('')}</div>
+        <div class="subsection"><h3>1.6 Допущения</h3><ul>${assumptions.map(a => `<li>${a}</li>`).join('')}</ul></div>
     `;
 }
 
-// Основная инициализация
-document.addEventListener('DOMContentLoaded', () => {
-    // ---------- КОНТЕКСТ ----------
-    const soiList = document.getElementById('soi-components-list');
-    if (soiList) {
-        soiComponents.forEach(comp => { const li = document.createElement('li'); li.textContent = comp; soiList.appendChild(li); });
-    }
-    const extList = document.getElementById('external-systems-list');
-    if (extList) {
-        externalSystems.forEach(sys => { const li = document.createElement('li'); li.textContent = sys; extList.appendChild(li); });
-    }
-    const justDiv = document.getElementById('integration-justification');
-    if (justDiv) {
-        integrationJustification.forEach(j => {
-            const p = document.createElement('p');
-            p.innerHTML = `<strong>${j.system}:</strong> ${j.justification}`;
-            p.style.marginBottom = '10px';
-            justDiv.appendChild(p);
-        });
-    }
-    const assumptionsList = document.getElementById('assumptions-list');
-    if (assumptionsList) {
-        assumptions.forEach(a => { const li = document.createElement('li'); li.textContent = a; assumptionsList.appendChild(li); });
-    }
-    const entitiesDiv = document.getElementById('external-entities-table');
-    if (entitiesDiv) {
-        let html = '<div class="table-container"><table><thead><tr><th>Внешняя сущность</th><th>Поток в систему</th><th>Поток из системы</th></tr></thead><tbody>';
-        externalEntities.forEach(e => {
-            html += `<tr><td><strong>${e.entity}</strong></td><td>${e.input}</td><td>${e.output}</td></tr>`;
-        });
-        html += '</tbody></table></div>';
-        entitiesDiv.innerHTML = html;
-    }
+function renderConops() {
+    const container = document.getElementById('conops-content');
+    if (!container) return;
+    container.innerHTML = `
+        <h3>Стейкхолдеры</h3><div class="table-container"><table><thead><tr><th>Стейкхолдер</th><th>Роль</th><th>Интересы</th><th>Требования</th></tr></thead><tbody>${stakeholders.map(s => `<tr><td><strong>${s.name}</strong></td><td>${s.role}</td><td>${s.interests}</td><td>${s.requirements}</td></tr>`).join('')}</tbody></table></div>
+        <h3>Матрица ответственности (Platform Engineering vs DevOps)</h3><div class="table-container"><table><thead><tr><th>Область</th><th>Platform Engineering</th><th>DevOps</th></tr></thead><tbody>${responsibilityMatrix.map(r => `<tr><td>${r.area}</td><td>${r.platformEng}</td><td>${r.devops}</td></tr>`).join('')}</tbody></table></div>
+        <h3>Сценарии (5)</h3>${scenarios.map(s => `<div class="info-card"><h4>${s.id}: ${s.name}</h4><p><strong>Цель:</strong> ${s.goal}</p><p><strong>Шаги:</strong> ${s.steps.join(' → ')}</p><p><strong>Исключения:</strong> ${s.exceptions.join(', ')}</p><p><strong>Деградация:</strong> ${s.degradations.join(', ')}</p></div>`).join('')}
+    `;
+}
 
-    // ---------- СТЕЙКХОЛДЕРЫ ----------
-    const stakeholdersTbody = document.querySelector('#stakeholders-table tbody');
-    if (stakeholdersTbody) {
-        stakeholders.forEach(s => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td><strong>${s.name}</strong></td><td>${s.role}</td><td>${s.interests}</td><td>${s.requirements}</td>`;
-            stakeholdersTbody.appendChild(tr);
-        });
-    }
-
-    // ---------- СЦЕНАРИИ ----------
-    const scenariosDiv = document.getElementById('scenarios-list');
-    if (scenariosDiv) {
-        scenarios.forEach(s => {
-            const card = document.createElement('div');
-            card.className = 'info-card';
-            card.style.marginBottom = '20px';
-            let stepsHtml = '<ol style="margin-left:20px;">' + s.steps.map(step => `<li>${step}</li>`).join('') + '</ol>';
-            let exceptionsHtml = '<ul style="margin-left:20px;color:var(--accent-red);">' + s.exceptions.map(e => `<li>${e}</li>`).join('') + '</ul>';
-            let degradationsHtml = '<ul style="margin-left:20px;color:var(--accent-yellow);">' + s.degradations.map(d => `<li>${d}</li>`).join('') + '</ul>';
-            card.innerHTML = `
-                <h3>${s.id}: ${s.name}</h3>
-                <p><strong>🎯 Цель:</strong> ${s.goal}</p>
-                <div><h4>📋 Основной поток</h4>${stepsHtml}</div>
-                <div><h4>⚠️ Исключения</h4>${exceptionsHtml}</div>
-                <div><h4>🔄 Режимы деградации</h4>${degradationsHtml}</div>
-            `;
-            scenariosDiv.appendChild(card);
-        });
-    }
-
-    // ---------- ТРЕБОВАНИЯ ----------
-    renderRequirements('all');
-    const filterBar = document.getElementById('req-filter-bar');
+function renderRequirementsPage() {
+    const container = document.getElementById('requirements-content');
+    if (!container) return;
+    const types = { 'SR-SH': 'Stakeholder', 'SR-SYS': 'System', 'NFR': 'NFR' };
+    let html = `<div class="filter-bar" id="req-filter-bar-local"></div><div class="table-container"><table><thead><tr><th>ID</th><th>Тип</th><th>Описание</th><th>Метрика</th></tr></thead><tbody id="req-table-body"></tbody></table></div>
+                 <h3>Acceptance Criteria</h3><ul>${acceptanceCriteria.map(ac => `<li><strong>${ac.req}:</strong> ${ac.criteria}</li>`).join('')}</ul>
+                 <h3>Согласованность</h3><div class="info-card"><ul>${requirementTraceability.map(rt => `<li><strong>${rt.stakeholder}</strong> → ${rt.system.join(', ')} → ${rt.nfr.join(', ') || '—'}</li>`).join('')}</ul></div>`;
+    container.innerHTML = html;
+    const tbody = document.getElementById('req-table-body');
+    const renderTable = (filter) => {
+        const filtered = filter === 'all' ? requirements : requirements.filter(r => r.type === filter);
+        tbody.innerHTML = filtered.map(r => `<tr><td><strong>${r.id}</strong></td><td><span class="badge badge-${r.type === 'SR-SH' ? 'blue' : (r.type === 'SR-SYS' ? 'green' : 'yellow')}">${types[r.type]}</span></td><td>${r.description}</td><td>${r.metric}</td></tr>`).join('');
+    };
+    const filterBar = document.getElementById('req-filter-bar-local');
     if (filterBar) {
-        const types = ['all', 'SR-SH', 'SR-SYS', 'NFR'];
-        types.forEach(type => {
+        ['all','SR-SH','SR-SYS','NFR'].forEach(type => {
             const btn = document.createElement('button');
             btn.className = 'filter-btn' + (type === 'all' ? ' active' : '');
-            btn.dataset.type = type;
-            btn.textContent = type === 'all' ? 'Все (24)' : (type === 'SR-SH' ? 'Stakeholder (7)' : (type === 'SR-SYS' ? 'System (12)' : 'NFR (5)'));
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('#req-filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
+            btn.textContent = type === 'all' ? 'Все' : types[type];
+            btn.onclick = () => {
+                document.querySelectorAll('#req-filter-bar-local .filter-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                renderRequirements(type);
-            });
+                renderTable(type);
+            };
             filterBar.appendChild(btn);
         });
     }
-    const reqTraceDiv = document.getElementById('req-traceability-info');
-    if (reqTraceDiv) {
-        let html = '<div class="info-card"><ul>';
-        requirementTraceability.forEach(rt => {
-            html += `<li><strong>${rt.stakeholder}</strong> → System: ${rt.system.join(', ')} → NFR: ${rt.nfr.length ? rt.nfr.join(', ') : '—'}</li>`;
-        });
-        html += '</ul></div>';
-        reqTraceDiv.innerHTML = html;
-    }
+    renderTable('all');
+}
 
-    // ---------- АРХИТЕКТУРА ----------
-    const archList = document.getElementById('arch-components-list');
-    if (archList) {
-        archComponents.forEach(comp => { const li = document.createElement('li'); li.textContent = comp; archList.appendChild(li); });
-    }
-    const interactionsTbody = document.querySelector('#interactions-table tbody');
-    if (interactionsTbody) {
-        componentInteractions.forEach(c => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${c.from}</td><td>${c.to}</td><td><code>${c.protocol}</code></td><td>${c.description}</td>`;
-            interactionsTbody.appendChild(tr);
-        });
-    }
-    const adrDiv = document.getElementById('adr-list');
-    if (adrDiv) {
-        adrs.forEach(adr => {
-            const card = document.createElement('div');
-            card.className = 'info-card';
-            card.style.marginBottom = '15px';
-            card.innerHTML = `
-                <h4>${adr.title}</h4>
-                <p><strong>Контекст:</strong> ${adr.context}</p>
-                <p><strong>Решение:</strong> ${adr.decision}</p>
-                <p><strong>Альтернативы:</strong> ${adr.alternatives}</p>
-                <p><strong>Trade-off:</strong> ${adr.tradeoff}</p>
-            `;
-            adrDiv.appendChild(card);
-        });
-    }
-    const techTbody = document.querySelector('#tech-stack-table tbody');
-    if (techTbody) {
-        techStack.forEach(t => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td><strong>${t.component}</strong></td><td>${t.stack}</td><td>${t.reason}</td>`;
-            techTbody.appendChild(tr);
-        });
-    }
+function renderArchitecture() {
+    const container = document.getElementById('architecture-content');
+    if (!container) return;
+    container.innerHTML = `
+        <h3>Модель архитектуры (C4 Container)</h3><div class="diagram-container"><div class="mermaid" id="c4-diagram">C4Context
+          Person(trader, "Трейдер")
+          Person(mm, "Маркет-мейкер")
+          System_Boundary(rs, "RocketSpot") {
+            Container(web, "Web UI", "React")
+            Container(gateway, "API Gateway", "Kong")
+            Container(matching, "Matching Engine", "Rust")
+            Container(account, "Ledger", "Java")
+            Container(orchestrator, "Orchestrator", "Go+Temporal")
+            Container(aml, "AML Engine", "Python")
+            Container(hsmAdapter, "HSM Adapter", "C++")
+            Container(audit, "Audit", "Elasticsearch")
+          }
+          ContainerDb(pg, "PostgreSQL")
+          ContainerDb(kafka, "Kafka")
+          System_Ext(hsm, "HSM КриптоПро")
+          System_Ext(bc, "Блокчейн-ноды")
+          Rel(trader, gateway, "HTTPS")
+          Rel(gateway, matching, "gRPC")
+          Rel(gateway, orchestrator, "REST")
+          Rel(orchestrator, aml, "gRPC")
+          Rel(orchestrator, hsmAdapter, "PKCS#11")
+          Rel(hsmAdapter, hsm, "TCP/TLS")
+          Rel(orchestrator, bc, "JSON-RPC")
+          Rel(account, pg, "SQL")
+          Rel(orchestrator, kafka, "TCP")
+          Rel(kafka, audit, "TCP")
+        </div></div>
+        <h3>Декомпозиция компонентов</h3><ul>${archComponents.map(c => `<li>${c}</li>`).join('')}</ul>
+        <h3>Взаимодействие</h3><div class="table-container"><table><thead><tr><th>От</th><th>К</th><th>Протокол</th><th>Описание</th></tr></thead><tbody>${componentInteractions.map(i => `<tr><td>${i.from}</td><td>${i.to}</td><td><code>${i.protocol}</code></td><td>${i.description}</td></tr>`).join('')}</tbody></table></div>
+        <h3>ADR (с альтернативами)</h3>${adrs.map(adr => `<div class="info-card"><h4>${adr.title}</h4><p><strong>Контекст:</strong> ${adr.context}</p><p><strong>Решение:</strong> ${adr.decision}</p><p><strong>Альтернативы:</strong> ${adr.alternatives}</p><p><strong>Trade-off:</strong> ${adr.tradeoff}</p></div>`).join('')}
+        <h3>Технологический стек</h3><div class="table-container"><table><thead><tr><th>Компонент</th><th>Стек</th><th>Обоснование</th></tr></thead><tbody>${techStack.map(t => `<tr><td><strong>${t.component}</strong></td><td>${t.stack}</td><td>${t.reason}</td></tr>`).join('')}</tbody></table></div>
+    `;
+    setTimeout(() => mermaid.contentLoaded(), 100);
+}
 
-    // ---------- API ----------
-    const apiDiv = document.getElementById('api-withdraw');
-    if (apiDiv) {
-        apiDiv.innerHTML = `
-            <div class="api-block">
-                <h4>Запрос</h4>
-                <p><strong>Method:</strong> POST</p>
-                <p><strong>Endpoint:</strong> /api/v2/withdraw</p>
-                <p><strong>Idempotency:</strong> <code>Idempotency-Key</code> header (обязателен)</p>
-                <p><strong>Retry policy:</strong> Exponential backoff 1s,2s,4s, max 3 attempts</p>
-                <p><strong>Заголовки:</strong></p>
-                <ul><li><code>Authorization: Api-Key &lt;key&gt;</code></li><li><code>X-Signature: &lt;HMAC-SHA512(body+timestamp)&gt;</code></li><li><code>X-Timestamp: &lt;unix_time&gt;</code></li><li><code>Idempotency-Key: &lt;UUID&gt;</code></li></ul>
-                <p><strong>Тело запроса:</strong></p>
-                <pre>{
+function renderApi() {
+    const container = document.getElementById('api-content');
+    if (!container) return;
+    container.innerHTML = `
+        <h3>POST /api/v2/withdraw</h3><div class="api-block"><pre>{
   "currency": "BTC",
   "address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
   "amount": "0.5",
   "network": "BTC",
   "twofa_code": "123456"
-}</pre>
-                <h4>Ответы</h4>
-                <table><thead><tr><th>Код</th><th>Описание</th><th>Retry?</th></tr></thead>
-                <tbody><tr><td>202</td><td>Заявка принята</td><td>❌</td></tr><tr><td>400</td><td>Неверный формат</td><td>❌</td></tr><tr><td>401</td><td>Неверная подпись/2FA</td><td>❌</td></tr><tr><td>403</td><td>Недостаточно прав</td><td>❌</td></tr><tr><td>409</td><td>Дублирование Idempotency-Key</td><td>✅</td></tr><tr><td>422</td><td>AML risk high / IP not whitelisted</td><td>❌</td></tr><tr><td>429</td><td>Rate limit exceeded</td><td>✅</td></tr><tr><td>500</td><td>Внутренняя ошибка</td><td>✅</td></tr><tr><td>503</td><td>Сервис недоступен</td><td>✅</td></tr></tbody></table>
-            </div>
-        `;
-    }
-    const eventDiv = document.getElementById('api-event');
-    if (eventDiv) {
-        eventDiv.innerHTML = `
-            <div class="api-block">
-                <h4>Событие: TransactionSignedEvent</h4>
-                <p><strong>Назначение:</strong> Оповещение Ledger-сервиса о списании средств</p>
-                <p><strong>Схема:</strong></p>
-                <pre>{
+}</pre><p><strong>Idempotency-Key</strong> обязателен. Retry: экспоненциальная задержка.</p></div>
+        <h3>TransactionSignedEvent</h3><div class="api-block"><pre>{
   "event_id": "evt-123",
   "event_type": "transaction.signed.v1",
-  "occurred_at": "2023-10-27T10:25:00Z",
-  "withdrawal_id": "wd-123e4567...",
-  "tx_hash": "0x123...abc",
-  "signed_at": "...",
-  "signer": "hsm-cluster-01",
-  "signature_type": "ГОСТ Р 34.10-2021",
-  "correlation_id": "corr-456"
-}</pre>
-                <p><strong>Idempotency:</strong> по полю <code>event_id</code></p>
-            </div>
+  "withdrawal_id": "wd-...",
+  "tx_hash": "0x...",
+  "signature_type": "ГОСТ Р 34.10-2021"
+}</pre><p>Idempotency по event_id.</p></div>
+    `;
+}
+
+function renderRisks() {
+    const container = document.getElementById('risks-content');
+    if (!container) return;
+    container.innerHTML = `<div class="table-container"><table><thead><tr><th>ID</th><th>Риск</th><th>Вероятность</th><th>Влияние</th><th>Приоритет</th><th>Меры</th><th>Остаточный риск</th></tr></thead><tbody>${risks.map(r => `<tr><td><strong>${r.id}</strong></td><td>${r.risk}</td><td><span class="badge badge-${r.probability === 'Низкая' ? 'green' : 'yellow'}">${r.probability}</span></td><td><span class="badge badge-${r.impact === 'Критическое' ? 'red' : 'yellow'}">${r.impact}</span></td><td><span class="badge badge-${r.priority >= 6 ? 'red' : (r.priority >= 4 ? 'yellow' : 'green')}">${r.priority}</span></td><td>${r.mitigation}</td><td>${r.residualRisk}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function renderVandV() {
+    const container = document.getElementById('vandv-content');
+    if (!container) return;
+    container.innerHTML = `
+        <h3>Тест-кейсы (10)</h3>${testCases.map(tc => `<div class="info-card"><h4>${tc.id}: ${tc.name}</h4><p><strong>Цель:</strong> ${tc.goal}</p><p><strong>Ожидаемый результат:</strong> ${tc.expected}</p><p><strong>Метод:</strong> ${tc.method} — ${tc.methodDesc}</p></div>`).join('')}
+        <h3>Матрица верификации</h3><div class="table-container"><table><thead><tr><th>Требование</th><th>Метод</th><th>Артефакт</th></tr></thead><tbody>${verificationMatrix.map(v => `<tr><td>${v.requirement}</td><td>${v.method}</td><td>${v.artifact}</td></tr>`).join('')}</tbody></table></div>
+        <h3>Матрица трассируемости</h3><div class="table-container"><table><thead><tr><th>Требование</th>${Array(10).fill().map((_,i) => `<th>TC-${(i+1).toString().padStart(2,'0')}</th>`).join('')}</tr></thead><tbody>${traceability.map(t => `<tr><td><strong>${t.req}</strong></td>${Array(10).fill().map((_,i) => `<td class="traceability-check">${t[`tc${(i+1).toString().padStart(2,'0')}`] ? '✓' : ''}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    `;
+}
+
+function renderGlossaryPage() {
+    const container = document.getElementById('glossary-content');
+    if (!container) return;
+    container.innerHTML = `<div class="table-container"><table><thead><tr><th>Термин</th><th>Определение</th></tr></thead><tbody>${glossary.map(g => `<tr><td><strong>${g.term}</strong></td><td>${g.def}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function renderDashboardStats() {
+    const statsDiv = document.getElementById('dashboard-stats');
+    if (statsDiv) {
+        statsDiv.innerHTML = `
+            <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value">5</div><div class="stat-label">Сценариев</div></div>
+            <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">7</div><div class="stat-label">Stakeholder</div></div>
+            <div class="stat-card"><div class="stat-icon">⚙️</div><div class="stat-value">12</div><div class="stat-label">System</div></div>
+            <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value">5</div><div class="stat-label">NFR</div></div>
+            <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value">5</div><div class="stat-label">Рисков</div></div>
+            <div class="stat-card"><div class="stat-icon">🧪</div><div class="stat-value">10</div><div class="stat-label">Тест-кейсов</div></div>
         `;
     }
+}
 
-    // ---------- РИСКИ ----------
-    const risksTbody = document.querySelector('#risks-table tbody');
-    if (risksTbody) {
-        risks.forEach(r => {
-            const tr = document.createElement('tr');
-            const probBadge = r.probability === 'Низкая' ? 'green' : (r.probability === 'Средняя' ? 'yellow' : 'red');
-            const impBadge = r.impact === 'Критическое' ? 'red' : (r.impact === 'Высокое' ? 'yellow' : 'green');
-            const priorityBadge = r.priority >= 6 ? 'red' : (r.priority >= 4 ? 'yellow' : 'green');
-            tr.innerHTML = `
-                <td><strong>${r.id}</strong></td><td>${r.risk}</td>
-                <td><span class="badge badge-${probBadge}">${r.probability}</span></td>
-                <td><span class="badge badge-${impBadge}">${r.impact}</span></td>
-                <td><span class="badge badge-${priorityBadge}">${r.priority}</span></td>
-                <td>${r.mitigation}</td><td>${r.residualRisk}</td>
-            `;
-            risksTbody.appendChild(tr);
-        });
-    }
-
-    // ---------- ТЕСТ-КЕЙСЫ ----------
-    const tcDiv = document.getElementById('testcases-list');
-    if (tcDiv) {
-        testCases.forEach(tc => {
-            const card = document.createElement('div');
-            card.className = 'info-card';
-            card.style.marginBottom = '15px';
-            let methodBadge = '';
-            if (tc.method.includes('Test')) methodBadge += '<span class="badge badge-green">Test</span> ';
-            if (tc.method.includes('Demo')) methodBadge += '<span class="badge badge-blue">Demo</span> ';
-            if (tc.method.includes('Analysis')) methodBadge += '<span class="badge badge-yellow">Analysis</span> ';
-            if (tc.method.includes('Inspection')) methodBadge += '<span class="badge badge-yellow">Inspection</span> ';
-            card.innerHTML = `
-                <h4>${tc.id}: ${tc.name}</h4>
-                <p><strong>🎯 Цель:</strong> ${tc.goal}</p>
-                <p><strong>✅ Ожидаемый результат:</strong> ${tc.expected}</p>
-                <p><strong>🔬 Метод верификации:</strong> ${methodBadge} — ${tc.methodDesc}</p>
-            `;
-            tcDiv.appendChild(card);
-        });
-    }
-
-    // ---------- МАТРИЦА ТРАССИРУЕМОСТИ ----------
-    const traceTbody = document.querySelector('#traceability-table tbody');
-    if (traceTbody) {
-        traceability.forEach(t => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${t.req}</strong></td>
-                <td class="traceability-check">${t.tc01 ? '✓' : ''}</td>
-                <td class="traceability-check">${t.tc02 ? '✓' : ''}</td>
-                <td class="traceability-check">${t.tc03 ? '✓' : ''}</td>
-                <td class="traceability-check">${t.tc04 ? '✓' : ''}</td>
-                <td class="traceability-check">${t.tc05 ? '✓' : ''}</td>
-                <td class="traceability-check">${t.tc06 ? '✓' : ''}</td>
-                <td class="traceability-check">${t.tc07 ? '✓' : ''}</td>
-                <td class="traceability-check">${t.tc08 ? '✓' : ''}</td>
-                <td class="traceability-check">${t.tc09 ? '✓' : ''}</td>
-                <td class="traceability-check">${t.tc10 ? '✓' : ''}</td>
-            `;
-            traceTbody.appendChild(tr);
-        });
-    }
-
-    // Вызов дополнительных рендеров
-    renderGlossary();
-    renderResponsibilityMatrix();
-    renderAcceptanceCriteria();
-    renderVerificationMatrix();
+// Инициализация после загрузки DOM
+document.addEventListener('DOMContentLoaded', () => {
+    initNavigation();
+    renderContext();
+    renderConops();
+    renderRequirementsPage();
+    renderArchitecture();
+    renderApi();
+    renderRisks();
+    renderVandV();
+    renderGlossaryPage();
     renderDashboardStats();
+    // Перерисовываем Mermaid для архитектурной диаграммы
+    if (typeof mermaid !== 'undefined') {
+        try { mermaid.contentLoaded(); } catch(e) { console.warn(e); }
+    }
+    feather.replace();
 });
