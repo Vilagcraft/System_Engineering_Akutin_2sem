@@ -159,7 +159,9 @@
         .badge-blue { background-color: rgba(31, 111, 235, 0.2); color: var(--accent-blue); }
         .traceability-check { color: var(--accent-green); font-weight: bold; text-align: center; }
         .subsection { margin-bottom: 30px; }
-        .subsection ul, .subsection ol { margin-left: 20px; color: var(--text-secondary); }
+        .subsection ul, .subsection ol { margin-left: 25px; padding-left: 0; color: var(--text-secondary); }
+        .subsection li { margin-bottom: 6px; }
+        .info-card ul, .info-card ol { margin-left: 25px; margin-top: 10px; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-primary); }
         ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 4px; }
@@ -207,14 +209,34 @@
                 <div class="stat-card"><div class="stat-icon">🧪</div><div class="stat-value">10</div><div class="stat-label">Тест-кейсов</div></div>
             </div>
             <div class="info-card"><h2>🎯 Миссия системы</h2><p>Высоконадёжная (доступность ≥99.95% в месяц), безопасная, соответствующая 115-ФЗ, 259-ФЗ, ГОСТ Р 34.10-2021 платформа криптобиржи RocketSpot.</p><ul style="margin-top:15px; margin-left:20px;"><li>Self-service управление API-ключами (корпоративный клиент)</li><li>Оркестрация холодных/горячих кошельков с M-of-N мультиподписью</li><li>Централизованный аудит с логической изоляцией tenant-данных (namespace + RBAC)</li><li>Поддержка блокчейнов: BTC, ETH, TRON (расширяемо по критериям)</li></ul></div>
-            <div class="diagram-container"><h3>Контекстная диаграмма (L0)</h3><div class="mermaid">graph TB
-                subgraph Users["👥 ПОЛЬЗОВАТЕЛИ"] Trader["Трейдер"] MM["Маркет-мейкер"] end
-                subgraph Internal["🏢 ВНУТРЕННИЕ РОЛИ"] Compliance["Compliance"] Treasury["Казначей"] SecOps["SecOps"] end
-                subgraph External["🌐 ВНЕШНИЕ ОРГАНЫ"] Gov["Госорганы"] end
-                subgraph Tech["⚙️ ТЕХНИЧЕСКАЯ ИНФРАСТРУКТУРА"] HSM["HSM КриптоПро"] Blockchain["Блокчейн-ноды"] Banks["Платежные шлюзы"] end
-                Central["🎯 RocketSpot Core Platform"]
-                Users --> Central; Internal --> Central; External --> Central; Tech --> Central
-                Central --> Users; Central --> Internal; Central --> External; Central --> Tech
+            <div class="diagram-container"><h3>Контекстная диаграмма (L0)</h3><div class="mermaid" id="context-diagram">
+                graph TB
+                    subgraph Users["ПОЛЬЗОВАТЕЛИ И ПАРТНЕРЫ"]
+                        Trader["Трейдер"]
+                        MM["Маркет-мейкер"]
+                    end
+                    subgraph Internal["ВНУТРЕННИЕ РОЛИ"]
+                        Compliance["Compliance"]
+                        Treasury["Казначей"]
+                        SecOps["SecOps"]
+                    end
+                    subgraph External["ВНЕШНИЕ ОРГАНЫ"]
+                        Gov["Госорганы"]
+                    end
+                    subgraph Tech["ТЕХНИЧЕСКАЯ ИНФРАСТРУКТУРА"]
+                        HSM["HSM КриптоПро"]
+                        Blockchain["Блокчейн-ноды"]
+                        Banks["Платежные шлюзы"]
+                    end
+                    Central["RocketSpot Core Platform"]
+                    Users --> Central
+                    Internal --> Central
+                    External --> Central
+                    Tech --> Central
+                    Central --> Users
+                    Central --> Internal
+                    Central --> External
+                    Central --> Tech
             </div></div>
         </section>
 
@@ -223,13 +245,23 @@
             <h2>1. Контекст и границы системы (SoI)</h2>
             <div class="subsection"><h3>1.1 Цель системы</h3><p>Спроектировать, реализовать и эксплуатировать высоконадёжную (доступность ≥99.95% в месяц), безопасную и соответствующую нормативным требованиям платформу для криптовалютной биржи RocketSpot.</p></div>
             <div class="subsection"><h3>1.2 Контекст (Среда и внешние системы)</h3><ul><li>Эксплуатационная среда: Гибридное облако (Yandex Cloud) + on-premise ЦОД, изолированные сегменты сети (DMZ, сеть обработки платежей, HSM-сегмент)</li><li>Операционный контур: Platform Engineering, DevOps, SecOps, Treasury, Compliance, Legal</li><li>Ключевые ограничения: 115-ФЗ, 259-ФЗ, ФЗ-152, ГОСТ Р 34.10-2012/2021, обязательное использование HSM on-premise кластера</li></ul></div>
-            <div class="subsection"><h3>1.3 Внешние сущности и потоки данных</h3><div class="table-container"><table><thead><tr><th>Внешняя сущность</th><th>Поток в систему</th><th>Поток из системы</th></tr></thead><tbody><tr><td><strong>Трейдер (розничный)</strong></td><td>Торговые ордера, заявки на вывод, API-ключи, 2FA</td><td>Исполнение ордеров, статус вывода, балансы</td></tr><tr><td><strong>Маркет-мейкер</strong></td><td>Высокочастотные ордера</td><td>Рыночные данные, лимиты, алерты</td></tr><tr><td><strong>Корпоративный клиент</strong></td><td>Корпоративные выводы, запросы на мультиподпись</td><td>Выписки, статусы одобрения</td></tr><tr><td><strong>Compliance-офицер</strong></td><td>Установка лимитов, заморозка счетов, AML-правила</td><td>Алерты по подозрительным транзакциям, отчёты по 115-ФЗ</td></tr><tr><td><strong>Казначей (Treasury)</strong></td><td>Пополнение hot wallet, инициация cold storage вывода</td><td>Статусы резервов, транзакции на подпись</td></tr><tr><td><strong>SecOps / ИБ-аналитик</strong></td><td>Ротация мастер-ключей, emergency revoke</td><td>Алерты безопасности, журнал инцидентов, статусы HSM</td></tr><tr><td><strong>Администратор платформы</strong></td><td>Управление конфигурацией, мониторинг</td><td>Метрики, логи, алерты</td></tr><tr><td><strong>HSM Cluster (КриптоПро)</strong></td><td>Криптографические операции</td><td>Подпись транзакции, генерация ключей</td></tr><tr><td><strong>Блокчейн-ноды</strong></td><td>Подтверждения транзакций, балансы</td><td>Подписанные транзакции, broadcast</td></tr></tbody></div></div>
+            <div class="subsection"><h3>1.3 Внешние сущности и потоки данных</h3><div class="table-container"><table><thead><tr><th>Внешняя сущность</th><th>Поток в систему</th><th>Поток из системы</th></tr></thead><tbody>
+                <tr><td><strong>Трейдер (розничный)</strong></td><td>Торговые ордера, заявки на вывод, API-ключи, 2FA</td><td>Исполнение ордеров, статус вывода, балансы</td></tr>
+                <tr><td><strong>Маркет-мейкер</strong></td><td>Высокочастотные ордера</td><td>Рыночные данные, лимиты, алерты</td></tr>
+                <tr><td><strong>Корпоративный клиент</strong></td><td>Корпоративные выводы, запросы на мультиподпись</td><td>Выписки, статусы одобрения</td></tr>
+                <tr><td><strong>Compliance-офицер</strong></td><td>Установка лимитов, заморозка счетов, AML-правила</td><td>Алерты по подозрительным транзакциям, отчёты по 115-ФЗ</td></tr>
+                <tr><td><strong>Казначей (Treasury)</strong></td><td>Пополнение hot wallet, инициация cold storage вывода</td><td>Статусы резервов, транзакции на подпись</td></tr>
+                <tr><td><strong>SecOps / ИБ-аналитик</strong></td><td>Ротация мастер-ключей, emergency revoke</td><td>Алерты безопасности, журнал инцидентов, статусы HSM</td></tr>
+                <tr><td><strong>Администратор платформы</strong></td><td>Управление конфигурацией, мониторинг</td><td>Метрики, логи, алерты</td></tr>
+                <tr><td><strong>HSM Cluster (КриптоПро)</strong></td><td>Криптографические операции</td><td>Подпись транзакции, генерация ключей</td></tr>
+                <tr><td><strong>Блокчейн-ноды</strong></td><td>Подтверждения транзакций, балансы</td><td>Подписанные транзакции, broadcast</td></tr>
+            </tbody></tr></div></div>
             <div class="subsection"><h3>1.4 Границы SoI</h3><h4>Внутри SoI (разрабатываемые компоненты)</h4><ul><li>Торговый движок (Rust/C++)</li><li>API Gateway (Kong/Traefik)</li><li>Оркестратор кошельков (Go + Temporal)</li><li>HSM-Адаптер (PKCS#11)</li><li>AML Risk Engine (Python/FastAPI)</li><li>KMS (Key Management Service)</li><li>Аудиторское хранилище (WORM, retention 7 лет, 10k событий/сек)</li><li>Admin Back Office</li></ul><h4>Снаружи SoI (интегрируемые системы)</h4><ul><li>HSM Cluster (КриптоПро on-premise, 3 узла)</li><li>Блокчейн-ноды (BTC/ETH/TRON)</li><li>SIEM (MaxPatrol)</li><li>KYC сервис (Sumsub)</li><li>Платежные шлюзы (Сбер, Т-Банк)</li></ul><h4>Границы ответственности</h4><p>RocketSpot отвечает за корректную оркестрацию заявок, соблюдение политик безопасности (M-of-N, AML), генерацию и подпись транзакций через HSM, а также за неизменяемый аудит. Внешние системы предоставляют сервисы по SLA.</p></div>
             <div class="subsection"><h3>1.5 Обоснование выбора интеграций</h3><p><strong>HSM Cluster:</strong> Требование 115-ФЗ и ГОСТ Р 34.10-2021. Аппаратная защита ключей, сертифицирована ФСБ. Развёртывание: on-premise кластер из 3 узлов, синхронная репликация, p99 latency <500 мс.</p><p><strong>Блокчейн-ноды:</strong> Взаимодействие с публичными сетями. Scope ограничен тремя блокчейнами (BTC, ETH, TRON) с возможностью добавления по критериям.</p><p><strong>SIEM (MaxPatrol):</strong> Требование ЦБ РФ к мониторингу инцидентов ИБ.</p><p><strong>KYC сервис (Sumsub):</strong> Требование 115-ФЗ для идентификации клиентов.</p><p><strong>Платежные шлюзы:</strong> Фиатные депозиты/выплаты в рублях для российских клиентов.</p></div>
             <div class="subsection"><h3>1.6 Допущения</h3><ul><li>SLA внешних интеграций ≥99.9%</li><li>HSM on-premise кластер с синхронной репликацией</li><li>Блокчейн-ноды синхронизированы, диск ≥2 ТБ</li><li>TLS 1.3 и VPN для платёжных шлюзов</li><li>2FA для доступа к админке</li><li>Резервное копирование БД каждые 6 часов (RPO <6 ч)</li><li>Dual control для админ. действий</li><li>Целевая нагрузка: 50k concurrent, 10k RPS, p99 <200 мс</li></ul></div>
         </section>
 
-        <!-- 2. CONOPS -->
+        <!-- 2. CONOPS (полностью заполнен) -->
         <section id="conops" class="section">
             <h2>2. CONOPS / OPSCON</h2>
             <h3>Стейкхолдеры</h3>
@@ -261,7 +293,7 @@
             <div class="info-card"><h4>S5: Расследование инцидента и формирование compliance-отчёта</h4><p><strong>Цель:</strong> Отчёт за 1 час по запросу аудитора</p><p><strong>Шаги:</strong> Ввод correlation_id → Сбор из WORM → Формирование шкалы → Обогащение из SIEM → Экспорт PDF/CSV → Подпись ЭЦП</p><p><strong>Исключения:</strong> Неполные данные → EvidenceGap; доступ запрещён → 403; период >1 года → 400</p><p><strong>Деградация:</strong> SIEM недоступен → только локальное WORM; часть логов отсутствует → отметка</p></div>
         </section>
 
-        <!-- 3. Требования (с фильтрацией) -->
+        <!-- 3. Требования (фильтрация) -->
         <section id="requirements" class="section">
             <h2>3. Требования</h2>
             <div class="filter-bar" id="req-filter-bar"></div>
@@ -276,36 +308,37 @@
         <section id="architecture" class="section">
             <h2>4. Архитектура</h2>
             <h3>4.1 Модель архитектуры (C4 Container diagram)</h3>
-            <div class="diagram-container"><div class="mermaid" id="c4-diagram">C4Context
-              Person(trader, "Трейдер")
-              Person(mm, "Маркет-мейкер")
-              System_Boundary(rs, "RocketSpot Platform") {
-                Container(web, "Web UI", "React")
-                Container(gateway, "API Gateway", "Kong/Traefik")
-                Container(matching, "Matching Engine", "Rust/C++")
-                Container(account, "Account & Ledger", "Java/Spring")
-                Container(orchestrator, "Wallet Orchestrator", "Go+Temporal")
-                Container(aml, "AML Risk Engine", "Python/FastAPI")
-                Container(hsmAdapter, "HSM Adapter", "C++/C#")
-                Container(audit, "Audit & Forensics", "Elasticsearch")
-              }
-              ContainerDb(pg, "PostgreSQL", "OLTP")
-              ContainerDb(kafka, "Kafka", "События")
-              System_Ext(hsm, "HSM Cluster (КриптоПро)")
-              System_Ext(bc, "Блокчейн-ноды (BTC/ETH/TRON)")
-              System_Ext(siem, "SIEM (MaxPatrol)")
-              Rel(trader, gateway, "HTTPS/REST")
-              Rel(mm, gateway, "WebSocket/gRPC")
-              Rel(gateway, matching, "gRPC")
-              Rel(gateway, orchestrator, "REST")
-              Rel(orchestrator, aml, "gRPC")
-              Rel(orchestrator, hsmAdapter, "gRPC/PKCS#11")
-              Rel(hsmAdapter, hsm, "TCP/TLS")
-              Rel(orchestrator, bc, "JSON-RPC")
-              Rel(account, pg, "SQL")
-              Rel(orchestrator, kafka, "TCP")
-              Rel(kafka, audit, "TCP")
-              Rel(audit, siem, "Syslog")
+            <div class="diagram-container"><div class="mermaid" id="c4-diagram">
+                C4Context
+                  Person(trader, "Трейдер")
+                  Person(mm, "Маркет-мейкер")
+                  System_Boundary(rs, "RocketSpot Platform") {
+                    Container(web, "Web UI", "React")
+                    Container(gateway, "API Gateway", "Kong/Traefik")
+                    Container(matching, "Matching Engine", "Rust/C++")
+                    Container(account, "Account & Ledger", "Java/Spring")
+                    Container(orchestrator, "Wallet Orchestrator", "Go+Temporal")
+                    Container(aml, "AML Risk Engine", "Python/FastAPI")
+                    Container(hsmAdapter, "HSM Adapter", "C++/C#")
+                    Container(audit, "Audit & Forensics", "Elasticsearch")
+                  }
+                  ContainerDb(pg, "PostgreSQL", "OLTP")
+                  ContainerDb(kafka, "Kafka", "События")
+                  System_Ext(hsm, "HSM Cluster (КриптоПро)")
+                  System_Ext(bc, "Блокчейн-ноды (BTC/ETH/TRON)")
+                  System_Ext(siem, "SIEM (MaxPatrol)")
+                  Rel(trader, gateway, "HTTPS/REST")
+                  Rel(mm, gateway, "WebSocket/gRPC")
+                  Rel(gateway, matching, "gRPC")
+                  Rel(gateway, orchestrator, "REST")
+                  Rel(orchestrator, aml, "gRPC")
+                  Rel(orchestrator, hsmAdapter, "gRPC/PKCS#11")
+                  Rel(hsmAdapter, hsm, "TCP/TLS")
+                  Rel(orchestrator, bc, "JSON-RPC")
+                  Rel(account, pg, "SQL")
+                  Rel(orchestrator, kafka, "TCP")
+                  Rel(kafka, audit, "TCP")
+                  Rel(audit, siem, "Syslog")
             </div></div>
             <h3>4.2 Декомпозиция компонентов</h3>
             <ul><li>Web UI / Mobile Backend</li><li>API Gateway (Kong/Traefik)</li><li>Matching Engine (Rust/C++)</li><li>Account & Ledger (Java/Spring)</li><li>Orchestrator (Go+Temporal)</li><li>HSM Adapter (C++/C#)</li><li>AML Risk Engine (Python/FastAPI)</li><li>KMS (Go)</li><li>Audit & Forensics (Elasticsearch WORM)</li></ul>
@@ -321,7 +354,7 @@
                 <tr><td>Account</td><td>PostgreSQL</td><td>SQL</td><td>Балансы</td></tr>
                 <tr><td>Все сервисы</td><td>Kafka</td><td>TCP</td><td>Аудит</td></tr>
                 <tr><td>Kafka</td><td>Audit</td><td>TCP</td><td>WORM</td></tr>
-            </tbody></table></div>
+            </tbody><table></div>
             <h3>4.4 Архитектурные решения (ADR) с альтернативами</h3>
             <div class="info-card"><h4>ADR-1: HSM для ключей</h4><p><strong>Контекст:</strong> Соответствие 115-ФЗ, ГОСТ</p><p><strong>Решение:</strong> КриптоПро on-premise кластер</p><p><strong>Альтернативы:</strong> Vault (не соответствует 115-ФЗ), Cloud HSM (нет сертификации)</p><p><strong>Trade-off:</strong> +40% бюджета vs защищённость</p></div>
             <div class="info-card"><h4>ADR-2: Saga Pattern (Temporal)</h4><p><strong>Контекст:</strong> Длительные операции вывода</p><p><strong>Решение:</strong> Temporal.io</p><p><strong>Альтернативы:</strong> Camunda (тяжеловесная), ручная Kafka (сложно)</p><p><strong>Trade-off:</strong> Сложность отладки vs гарантия финишности</p></div>
@@ -482,7 +515,6 @@
             </tr>
         `).join('');
     }
-    // Фильтры требований
     const filterBar = document.getElementById('req-filter-bar');
     if (filterBar) {
         const filters = ['all', 'SR-SH', 'SR-SYS', 'NFR'];
