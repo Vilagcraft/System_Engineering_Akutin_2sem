@@ -3,347 +3,535 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RocketSpot · Системная инженерия (исправленная версия)</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>RocketSpot · Системная инженерия (полная версия)</title>
+    <style>
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #1f6feb;
+            --accent-green: #2ea043;
+            --accent-red: #f85149;
+            --accent-yellow: #d29922;
+            --border-color: #30363d;
+            --sidebar-width: 260px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        .app { display: flex; min-height: 100vh; }
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+        .sidebar-header { padding: 0 20px 20px; border-bottom: 1px solid var(--border-color); }
+        .sidebar-header h2 { color: var(--accent-blue); font-size: 1.3rem; }
+        .sidebar-header p { color: var(--text-secondary); font-size: 0.8rem; margin-top: 5px; }
+        .nav-menu { list-style: none; padding: 20px 0; }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 20px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        .nav-item:hover { background-color: var(--bg-tertiary); color: var(--text-primary); }
+        .nav-item.active {
+            background-color: rgba(31, 111, 235, 0.1);
+            color: var(--accent-blue);
+            border-left-color: var(--accent-blue);
+        }
+        .nav-item svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; }
+        .content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 30px 40px;
+            max-width: calc(100% - var(--sidebar-width));
+        }
+        .section { display: none; }
+        .section.active { display: block; }
+        .section-header { margin-bottom: 30px; }
+        .section-header h1 { font-size: 2rem; margin-bottom: 8px; }
+        .section-header p { color: var(--text-secondary); }
+        h2 { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+        h3 { margin: 20px 0 15px; color: var(--text-primary); }
+        h4 { margin: 15px 0 10px; color: var(--text-primary); }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-icon { font-size: 2rem; margin-bottom: 10px; }
+        .stat-value { font-size: 2.5rem; font-weight: bold; color: var(--accent-blue); }
+        .stat-label { color: var(--text-secondary); font-size: 0.9rem; }
+        .info-card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        .table-container {
+            overflow-x: auto;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background-color: var(--bg-tertiary); font-weight: 600; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: rgba(255, 255, 255, 0.03); }
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .filter-btn:hover { background-color: var(--bg-tertiary); color: var(--text-primary); }
+        .filter-btn.active { background-color: var(--accent-blue); border-color: var(--accent-blue); color: white; }
+        .diagram-container {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+        }
+        .mermaid { text-align: center; background-color: #161b22; }
+        .api-block {
+            background-color: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .api-block pre {
+            background-color: #0d1117;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-green { background-color: rgba(46, 160, 67, 0.2); color: var(--accent-green); }
+        .badge-yellow { background-color: rgba(210, 153, 34, 0.2); color: var(--accent-yellow); }
+        .badge-red { background-color: rgba(248, 81, 73, 0.2); color: var(--accent-red); }
+        .badge-blue { background-color: rgba(31, 111, 235, 0.2); color: var(--accent-blue); }
+        .traceability-check { color: var(--accent-green); font-weight: bold; text-align: center; }
+        .subsection { margin-bottom: 30px; }
+        .subsection ul, .subsection ol { margin-left: 20px; color: var(--text-secondary); }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 4px; }
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar span, .sidebar-header p { display: none; }
+            .sidebar-header h2 { font-size: 1rem; text-align: center; }
+            .nav-item { justify-content: center; padding: 15px; }
+            .content { margin-left: 60px; padding: 20px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 </head>
 <body>
-    <div class="app">
-        <nav class="sidebar">
-            <div class="sidebar-header">
-                <h2>🚀 RocketSpot</h2>
-                <p>Системная инженерия</p>
+<div class="app">
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2>🚀 RocketSpot</h2>
+            <p>Системная инженерия</p>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item active" data-section="dashboard"><i data-feather="grid"></i><span>Дашборд</span></li>
+            <li class="nav-item" data-section="context"><i data-feather="globe"></i><span>1. Контекст и границы</span></li>
+            <li class="nav-item" data-section="conops"><i data-feather="play"></i><span>2. CONOPS / OPSCON</span></li>
+            <li class="nav-item" data-section="requirements"><i data-feather="check-square"></i><span>3. Требования</span></li>
+            <li class="nav-item" data-section="architecture"><i data-feather="layers"></i><span>4. Архитектура</span></li>
+            <li class="nav-item" data-section="api"><i data-feather="code"></i><span>5. Интерфейсы (ICD)</span></li>
+            <li class="nav-item" data-section="risks"><i data-feather="alert-triangle"></i><span>6. Риски</span></li>
+            <li class="nav-item" data-section="vandv"><i data-feather="check-circle"></i><span>7. V&V</span></li>
+            <li class="nav-item" data-section="glossary"><i data-feather="book-open"></i><span>Глоссарий</span></li>
+        </ul>
+    </nav>
+    <main class="content">
+        <!-- Дашборд -->
+        <section id="dashboard" class="section active">
+            <div class="section-header"><h1>RocketSpot · Криптобиржа</h1><p>Полная спецификация системы (все разделы заполнены)</p></div>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value">5</div><div class="stat-label">Сценариев</div></div>
+                <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">7</div><div class="stat-label">Stakeholder reqs</div></div>
+                <div class="stat-card"><div class="stat-icon">⚙️</div><div class="stat-value">12</div><div class="stat-label">System reqs</div></div>
+                <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value">5</div><div class="stat-label">NFR</div></div>
+                <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value">5</div><div class="stat-label">Рисков</div></div>
+                <div class="stat-card"><div class="stat-icon">🧪</div><div class="stat-value">10</div><div class="stat-label">Тест-кейсов</div></div>
             </div>
-            <ul class="nav-menu">
-                <li class="nav-item active" data-section="dashboard"><i data-feather="grid"></i><span>Дашборд</span></li>
-                <li class="nav-item" data-section="context"><i data-feather="globe"></i><span>1. Контекст и границы</span></li>
-                <li class="nav-item" data-section="conops"><i data-feather="play"></i><span>2. CONOPS / OPSCON</span></li>
-                <li class="nav-item" data-section="requirements"><i data-feather="check-square"></i><span>3. Требования</span></li>
-                <li class="nav-item" data-section="architecture"><i data-feather="layers"></i><span>4. Архитектура</span></li>
-                <li class="nav-item" data-section="api"><i data-feather="code"></i><span>5. Интерфейсы (ICD)</span></li>
-                <li class="nav-item" data-section="risks"><i data-feather="alert-triangle"></i><span>6. Риски</span></li>
-                <li class="nav-item" data-section="vandv"><i data-feather="check-circle"></i><span>7. V&V</span></li>
-                <li class="nav-item" data-section="glossary"><i data-feather="book-open"></i><span>Глоссарий</span></li>
-            </ul>
-        </nav>
+            <div class="info-card"><h2>🎯 Миссия системы</h2><p>Высоконадёжная (доступность ≥99.95% в месяц), безопасная, соответствующая 115-ФЗ, 259-ФЗ, ГОСТ Р 34.10-2021 платформа криптобиржи RocketSpot.</p><ul style="margin-top:15px; margin-left:20px;"><li>Self-service управление API-ключами (корпоративный клиент)</li><li>Оркестрация холодных/горячих кошельков с M-of-N мультиподписью</li><li>Централизованный аудит с логической изоляцией tenant-данных (namespace + RBAC)</li><li>Поддержка блокчейнов: BTC, ETH, TRON (расширяемо по критериям)</li></ul></div>
+            <div class="diagram-container"><h3>Контекстная диаграмма (L0)</h3><div class="mermaid">graph TB
+                subgraph Users["👥 ПОЛЬЗОВАТЕЛИ"] Trader["Трейдер"] MM["Маркет-мейкер"] end
+                subgraph Internal["🏢 ВНУТРЕННИЕ РОЛИ"] Compliance["Compliance"] Treasury["Казначей"] SecOps["SecOps"] end
+                subgraph External["🌐 ВНЕШНИЕ ОРГАНЫ"] Gov["Госорганы"] end
+                subgraph Tech["⚙️ ТЕХНИЧЕСКАЯ ИНФРАСТРУКТУРА"] HSM["HSM КриптоПро"] Blockchain["Блокчейн-ноды"] Banks["Платежные шлюзы"] end
+                Central["🎯 RocketSpot Core Platform"]
+                Users --> Central; Internal --> Central; External --> Central; Tech --> Central
+                Central --> Users; Central --> Internal; Central --> External; Central --> Tech
+            </div></div>
+        </section>
 
-        <main class="content">
-            <!-- ДАШБОРД -->
-            <section id="dashboard" class="section active">
-                <div class="section-header">
-                    <h1>RocketSpot · Криптобиржа</h1>
-                    <p>Исправленная версия по результатам рецензии – все требования измеримы, архитектура обоснована, V&V формализован</p>
-                </div>
-                <div class="stats-grid" id="dashboard-stats"></div>
-                <div class="info-card">
-                    <h2>🎯 Миссия системы</h2>
-                    <p>Спроектировать, реализовать и эксплуатировать высоконадёжную (доступность ≥99.95% в месяц), безопасную и соответствующую 115-ФЗ платформу для криптовалютной биржи RocketSpot.</p>
-                    <ul style="margin-top:15px; margin-left:20px;">
-                        <li>Self-service управление API-ключами (корпоративный клиент)</li>
-                        <li>Оркестрация холодных/горячих кошельков с M-of-N мультиподписью</li>
-                        <li>Централизованный аудит с логической изоляцией tenant-данных (namespace + RBAC)</li>
-                        <li>Поддержка блокчейнов: BTC, ETH, TRON (расширяемо по критериям)</li>
-                        <li>Измеримые цели: latency p99 <200 мс, доступность 99.95% / 99.99%, throughput 10 000 событий/сек, retention 7 лет</li>
-                    </ul>
-                </div>
-                <div class="diagram-container">
-                    <h3>Контекстная диаграмма (L0)</h3>
-                    <div class="mermaid" id="context-diagram-mini">
-                        graph TB
-                            subgraph Users["👥 ПОЛЬЗОВАТЕЛИ И ПАРТНЕРЫ"]
-                                Trader["Трейдер (розничный/корпоративный)"]
-                                MM["Маркет-мейкер"]
-                            end
-                            subgraph Internal["🏢 ВНУТРЕННИЕ РОЛИ"]
-                                Compliance["Compliance-офицер"]
-                                Treasury["Казначей"]
-                                SecOps["SecOps"]
-                                Admin["Администратор платформы"]
-                            end
-                            subgraph External["🌐 ВНЕШНИЕ ОРГАНЫ"]
-                                Gov["Госорганы (ФНС, Росфинмониторинг)"]
-                            end
-                            subgraph Tech["⚙️ ТЕХНИЧЕСКАЯ ИНФРАСТРУКТУРА"]
-                                HSM["HSM КриптоПро (on-premise кластер)"]
-                                Blockchain["Блокчейн-ноды (BTC/ETH/TRON)"]
-                                Banks["Платежные шлюзы (фиат)"]
-                            end
-                            Central["🎯 RocketSpot Core Platform"]
-                            Users -->|API/UI| Central
-                            Internal -->|Управление| Central
-                            External -->|Запросы| Central
-                            Tech -->|Интеграция| Central
-                            Central -->|Ответы, данные| Users
-                            Central -->|Отчёты, алерты| Internal
-                            Central -->|Отчёты 115-ФЗ| External
-                            Central -->|Команды| Tech
-                    </div>
-                </div>
-            </section>
+        <!-- 1. Контекст и границы -->
+        <section id="context" class="section">
+            <h2>1. Контекст и границы системы (SoI)</h2>
+            <div class="subsection"><h3>1.1 Цель системы</h3><p>Спроектировать, реализовать и эксплуатировать высоконадёжную (доступность ≥99.95% в месяц), безопасную и соответствующую нормативным требованиям платформу для криптовалютной биржи RocketSpot.</p></div>
+            <div class="subsection"><h3>1.2 Контекст (Среда и внешние системы)</h3><ul><li>Эксплуатационная среда: Гибридное облако (Yandex Cloud) + on-premise ЦОД, изолированные сегменты сети (DMZ, сеть обработки платежей, HSM-сегмент)</li><li>Операционный контур: Platform Engineering, DevOps, SecOps, Treasury, Compliance, Legal</li><li>Ключевые ограничения: 115-ФЗ, 259-ФЗ, ФЗ-152, ГОСТ Р 34.10-2012/2021, обязательное использование HSM on-premise кластера</li></ul></div>
+            <div class="subsection"><h3>1.3 Внешние сущности и потоки данных</h3><div class="table-container"><table><thead><tr><th>Внешняя сущность</th><th>Поток в систему</th><th>Поток из системы</th></tr></thead><tbody><tr><td><strong>Трейдер (розничный)</strong></td><td>Торговые ордера, заявки на вывод, API-ключи, 2FA</td><td>Исполнение ордеров, статус вывода, балансы</td></tr><tr><td><strong>Маркет-мейкер</strong></td><td>Высокочастотные ордера</td><td>Рыночные данные, лимиты, алерты</td></tr><tr><td><strong>Корпоративный клиент</strong></td><td>Корпоративные выводы, запросы на мультиподпись</td><td>Выписки, статусы одобрения</td></tr><tr><td><strong>Compliance-офицер</strong></td><td>Установка лимитов, заморозка счетов, AML-правила</td><td>Алерты по подозрительным транзакциям, отчёты по 115-ФЗ</td></tr><tr><td><strong>Казначей (Treasury)</strong></td><td>Пополнение hot wallet, инициация cold storage вывода</td><td>Статусы резервов, транзакции на подпись</td></tr><tr><td><strong>SecOps / ИБ-аналитик</strong></td><td>Ротация мастер-ключей, emergency revoke</td><td>Алерты безопасности, журнал инцидентов, статусы HSM</td></tr><tr><td><strong>Администратор платформы</strong></td><td>Управление конфигурацией, мониторинг</td><td>Метрики, логи, алерты</td></tr><tr><td><strong>HSM Cluster (КриптоПро)</strong></td><td>Криптографические операции</td><td>Подпись транзакции, генерация ключей</td></tr><tr><td><strong>Блокчейн-ноды</strong></td><td>Подтверждения транзакций, балансы</td><td>Подписанные транзакции, broadcast</td></tr></tbody></div></div>
+            <div class="subsection"><h3>1.4 Границы SoI</h3><h4>Внутри SoI (разрабатываемые компоненты)</h4><ul><li>Торговый движок (Rust/C++)</li><li>API Gateway (Kong/Traefik)</li><li>Оркестратор кошельков (Go + Temporal)</li><li>HSM-Адаптер (PKCS#11)</li><li>AML Risk Engine (Python/FastAPI)</li><li>KMS (Key Management Service)</li><li>Аудиторское хранилище (WORM, retention 7 лет, 10k событий/сек)</li><li>Admin Back Office</li></ul><h4>Снаружи SoI (интегрируемые системы)</h4><ul><li>HSM Cluster (КриптоПро on-premise, 3 узла)</li><li>Блокчейн-ноды (BTC/ETH/TRON)</li><li>SIEM (MaxPatrol)</li><li>KYC сервис (Sumsub)</li><li>Платежные шлюзы (Сбер, Т-Банк)</li></ul><h4>Границы ответственности</h4><p>RocketSpot отвечает за корректную оркестрацию заявок, соблюдение политик безопасности (M-of-N, AML), генерацию и подпись транзакций через HSM, а также за неизменяемый аудит. Внешние системы предоставляют сервисы по SLA.</p></div>
+            <div class="subsection"><h3>1.5 Обоснование выбора интеграций</h3><p><strong>HSM Cluster:</strong> Требование 115-ФЗ и ГОСТ Р 34.10-2021. Аппаратная защита ключей, сертифицирована ФСБ. Развёртывание: on-premise кластер из 3 узлов, синхронная репликация, p99 latency <500 мс.</p><p><strong>Блокчейн-ноды:</strong> Взаимодействие с публичными сетями. Scope ограничен тремя блокчейнами (BTC, ETH, TRON) с возможностью добавления по критериям.</p><p><strong>SIEM (MaxPatrol):</strong> Требование ЦБ РФ к мониторингу инцидентов ИБ.</p><p><strong>KYC сервис (Sumsub):</strong> Требование 115-ФЗ для идентификации клиентов.</p><p><strong>Платежные шлюзы:</strong> Фиатные депозиты/выплаты в рублях для российских клиентов.</p></div>
+            <div class="subsection"><h3>1.6 Допущения</h3><ul><li>SLA внешних интеграций ≥99.9%</li><li>HSM on-premise кластер с синхронной репликацией</li><li>Блокчейн-ноды синхронизированы, диск ≥2 ТБ</li><li>TLS 1.3 и VPN для платёжных шлюзов</li><li>2FA для доступа к админке</li><li>Резервное копирование БД каждые 6 часов (RPO <6 ч)</li><li>Dual control для админ. действий</li><li>Целевая нагрузка: 50k concurrent, 10k RPS, p99 <200 мс</li></ul></div>
+        </section>
 
-            <!-- 1. КОНТЕКСТ И ГРАНИЦЫ -->
-            <section id="context" class="section">
-                <h2>1. Контекст и границы системы (SoI)</h2>
-                <div class="subsection">
-                    <h3>1.1 Цель системы (Миссия)</h3>
-                    <p>Спроектировать, реализовать и эксплуатировать высоконадёжную (доступность ≥99.95% в месяц), безопасную и соответствующую нормативным требованиям (115-ФЗ, 259-ФЗ, ГОСТ Р 34.10-2021) платформу для криптовалютной биржи RocketSpot.</p>
-                </div>
-                <div class="subsection">
-                    <h3>1.2 Контекст (Среда и внешние системы)</h3>
-                    <ul>
-                        <li><strong>Эксплуатационная среда:</strong> Гибридное облако (Yandex Cloud) + on-premise ЦОД, изолированные сегменты сети (DMZ, сеть обработки платежей, HSM-сегмент)</li>
-                        <li><strong>Операционный контур:</strong> Platform Engineering, DevOps, SecOps, Treasury, Compliance, Legal</li>
-                        <li><strong>Ключевые ограничения:</strong> 115-ФЗ, 259-ФЗ, ФЗ-152, ГОСТ Р 34.10-2012/2021, обязательное использование HSM on-premise кластера</li>
-                    </ul>
-                </div>
-                <div class="subsection">
-                    <h3>1.3 Внешние сущности и потоки данных</h3>
-                    <div id="external-entities-table"></div>
-                </div>
-                <div class="subsection">
-                    <h3>1.4 Контекстная диаграмма (L0)</h3>
-                    <div class="diagram-container">
-                        <div class="mermaid" id="context-diagram-full">
-                            graph TB
-                                subgraph Users["ПОЛЬЗОВАТЕЛИ И ПАРТНЕРЫ"]
-                                    Trader["Трейдер (розничный/корпоративный)"]
-                                    MM["Маркет-мейкер"]
-                                end
-                                subgraph InternalRoles["ВНУТРЕННИЕ РОЛИ"]
-                                    Compliance["Compliance-офицер AML/CFT"]
-                                    Treasury["Казначей Treasury"]
-                                    SecOps["SecOps"]
-                                    Admin["Администратор платформы"]
-                                end
-                                subgraph ExternalSystems["ВНЕШНИЕ ОРГАНЫ"]
-                                    Gov["Госорганы (ФНС, Росфинмониторинг)"]
-                                end
-                                subgraph TechInfra["ТЕХНИЧЕСКАЯ ИНФРАСТРУКТУРА"]
-                                    HSM["HSM Cluster КриптоПро (on-premise, HA, 3 узла)"]
-                                    Blockchain["Блокчейн-ноды BTC/ETH/TRON"]
-                                    Banks["Платежные системы (Сбер, Т-Банк)"]
-                                end
-                                Central["🎯 RocketSpot Core Platform"]
-                                Trader -->|"Заявка на вывод, ордера"| Central
-                                Central -->|"Статус вывода, балансы"| Trader
-                                MM -->|"Высокочастотные ордера"| Central
-                                Central -->|"Рыночные данные, лимиты"| MM
-                                Compliance -->|"Лимиты, заморозка"| Central
-                                Central -->|"Алерты AML, отчёты"| Compliance
-                                Treasury -->|"Пополнение, мультиподпись"| Central
-                                Central -->|"Статусы резервов"| Treasury
-                                SecOps -->|"Ротация ключей, политики"| Central
-                                Central -->|"Алерты безопасности"| SecOps
-                                Admin -->|"Управление конфигурацией"| Central
-                                Central -->|"Метрики, логи"| Admin
-                                Gov -->|"Запросы регулятора"| Central
-                                Central -->|"Отчёты 115-ФЗ"| Gov
-                                Central -->|"Запрос на подпись (PKCS#11)"| HSM
-                                HSM -->|"Подпись, генерация ключей"| Central
-                                Central -->|"Broadcast транзакции"| Blockchain
-                                Blockchain -->|"Подтверждения, балансы"| Central
-                                Banks -->|"Фиатные депозиты"| Central
-                                Central -->|"Фиатные выплаты"| Banks
-                        </div>
-                    </div>
-                </div>
-                <div class="subsection">
-                    <h3>1.5 Границы SoI</h3>
-                    <h4>Внутри SoI (разрабатываемые компоненты)</h4>
-                    <ul id="soi-components-list"></ul>
-                    <h4>Снаружи SoI (интегрируемые системы)</h4>
-                    <ul id="external-systems-list"></ul>
-                    <h4>Границы ответственности</h4>
-                    <p>RocketSpot отвечает за корректную оркестрацию заявок, соблюдение политик безопасности (M-of-N, AML), генерацию и подпись транзакций через HSM, а также за неизменяемый аудит. Внешние системы (блокчейн-ноды, HSM, платёжные шлюзы, SIEM) предоставляют сервисы по SLA, но их внутренняя реализация не контролируется.</p>
-                </div>
-                <div class="subsection">
-                    <h3>1.6 Обоснование выбора интеграций</h3>
-                    <div id="integration-justification"></div>
-                </div>
-                <div class="subsection">
-                    <h3>1.7 Допущения</h3>
-                    <ul id="assumptions-list"></ul>
-                </div>
-            </section>
+        <!-- 2. CONOPS -->
+        <section id="conops" class="section">
+            <h2>2. CONOPS / OPSCON</h2>
+            <h3>Стейкхолдеры</h3>
+            <div class="table-container"><table><thead><tr><th>Стейкхолдер</th><th>Роль</th><th>Интересы</th><th>Требования</th></tr></thead><tbody>
+                <tr><td><strong>Трейдер (розничный)</strong></td><td>Конечный пользователь</td><td>Скорость, безопасность</td><td>Вывод ≤30 мин</td></tr>
+                <tr><td><strong>Маркет-мейкер</strong></td><td>Проф. трейдер</td><td>Низкая задержка</td><td>1000+ RPS, SLA 99.99%</td></tr>
+                <tr><td><strong>Корпоративный клиент</strong></td><td>Юр. лицо</td><td>Мультиподпись</td><td>Self-service ротация ключей</td></tr>
+                <tr><td><strong>Compliance</strong></td><td>Комплаенс</td><td>AML/CFT</td><td>Freeze <5 сек</td></tr>
+                <tr><td><strong>Казначей</strong></td><td>Финансы</td><td>M-of-N политика</td><td>M=2 из N=3</td></tr>
+                <tr><td><strong>SecOps</strong></td><td>ИБ</td><td>Управление HSM</td><td>Все ключи в HSM, revoke <60 сек</td></tr>
+                <tr><td><strong>Аудитор</strong></td><td>Регулятор</td><td>Неизменяемый журнал</td><td>WORM, retention 7 лет</td></tr>
+                <tr><td><strong>Администратор</strong></td><td>SRE</td><td>Наблюдаемость</td><td>RTO <15 мин, RPO <1 мин</td></tr>
+                <tr><td><strong>Бизнес-владелец</strong></td><td>CEO</td><td>Рентабельность</td><td>Доступность 99.95%</td></tr>
+                <tr><td><strong>Разработчик</strong></td><td>Dev</td><td>API, CI/CD</td><td>OpenAPI, тестнет</td></tr>
+            </tbody></table></div>
+            <h3>Матрица ответственности (Platform Engineering vs DevOps)</h3>
+            <div class="table-container"><table><thead><tr><th>Область</th><th>Platform Engineering</th><th>DevOps</th></tr></thead><tbody>
+                <tr><td>Инфраструктура (K8s, сети, HSM)</td><td>✅ владелец</td><td>использование</td></tr>
+                <tr><td>CI/CD пайплайны</td><td>инструменты</td><td>✅ владелец</td></tr>
+                <tr><td>Мониторинг и алертинг</td><td>база</td><td>✅ настройка метрик</td></tr>
+                <tr><td>Управление секретами (KMS, HSM)</td><td>✅ интеграция</td><td>использование</td></tr>
+                <tr><td>Disaster Recovery</td><td>✅ стратегия</td><td>бекапы БД</td></tr>
+            </tbody></table></div>
+            <h3>Сценарии использования (5)</h3>
+            <div class="info-card"><h4>S1: Вывод криптовалюты (основной сценарий)</h4><p><strong>Цель:</strong> Безопасный вывод средств</p><p><strong>Шаги:</strong> Инициирование → Pre-flight (2FA, AML) → Блокировка средств → Сборка транзакции → Согласование (<10k авто, ≥10k step-up) → Подпись HSM → Публикация → Финализация</p><p><strong>Исключения:</strong> Недостаточно средств, адрес в чёрном списке, превышен лимит</p><p><strong>Деградация:</strong> HSM недоступен → pending_hsm, retry; AML недоступен → ручное рассмотрение</p></div>
+            <div class="info-card"><h4>S2: Создание API-ключа для алгоритмической торговли</h4><p><strong>Цель:</strong> Self-service выдача ключей</p><p><strong>Шаги:</strong> 2FA → Выбор scope → IP whitelist для withdraw → KYC → Генерация ключа → Сохранение хеша → Аудит</p><p><strong>Исключения:</strong> Нет IP whitelist, дублирование имени, лимит ключей, KYC не пройден</p><p><strong>Деградация:</strong> БД недоступна → 503; API Gateway недоступен → pending_gateway</p></div>
+            <div class="info-card"><h4>S3: Мультиподпись для вывода из холодного хранилища</h4><p><strong>Цель:</strong> Безопасный вывод крупных сумм (>100k USD)</p><p><strong>Шаги:</strong> Инициация казначеем А → Создание multisig-запроса → Уведомление казначеев Б и В (кворум 2 из 3) → Подтверждение в админке → HSM собирает подписи → Отправка → Аудит</p><p><strong>Исключения:</strong> Недостаточно подписей за 24 часа, ошибка подписи, конфликт UTXO</p><p><strong>Деградация:</strong> HSM недоступен → pending_hsm; подписант недоступен → эскалация</p></div>
+            <div class="info-card"><h4>S4: Плановая ротация мастер-ключей HSM</h4><p><strong>Цель:</strong> Смена ключей без простоя, dual control</p><p><strong>Шаги:</strong> SecOps-1 инициирует → SecOps-2 подтверждает → HSM генерирует новый ключ → Перешифровка кошельков → Валидация → Архивация старого ключа → Аудит</p><p><strong>Исключения:</strong> Отказ подтверждения, ошибка перешифрования, HSM в maintenance</p><p><strong>Деградация:</strong> Частичная перешифровка → повтор через 1 час; сбой архивации → локальное сохранение</p></div>
+            <div class="info-card"><h4>S5: Расследование инцидента и формирование compliance-отчёта</h4><p><strong>Цель:</strong> Отчёт за 1 час по запросу аудитора</p><p><strong>Шаги:</strong> Ввод correlation_id → Сбор из WORM → Формирование шкалы → Обогащение из SIEM → Экспорт PDF/CSV → Подпись ЭЦП</p><p><strong>Исключения:</strong> Неполные данные → EvidenceGap; доступ запрещён → 403; период >1 года → 400</p><p><strong>Деградация:</strong> SIEM недоступен → только локальное WORM; часть логов отсутствует → отметка</p></div>
+        </section>
 
-            <!-- 2. CONOPS / OPSCON -->
-            <section id="conops" class="section">
-                <h2>2. CONOPS / OPSCON</h2>
-                <h3>Стейкхолдеры RocketSpot</h3>
-                <div class="table-container">
-                    <table id="stakeholders-table">
-                        <thead><tr><th>Стейкхолдер</th><th>Роль</th><th>Интересы / Ожидания</th><th>Ключевые требования</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-                <h3>Матрица ответственности (Platform Engineering vs DevOps)</h3>
-                <div class="table-container">
-                    <table id="responsibility-matrix">
-                        <thead><tr><th>Область</th><th>Platform Engineering</th><th>DevOps</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-                <h3>Сценарии использования (5)</h3>
-                <div id="scenarios-list"></div>
-            </section>
+        <!-- 3. Требования (с фильтрацией) -->
+        <section id="requirements" class="section">
+            <h2>3. Требования</h2>
+            <div class="filter-bar" id="req-filter-bar"></div>
+            <div class="table-container"><table id="requirements-table"><thead><tr><th>ID</th><th>Тип</th><th>Описание</th><th>Метрика / Критерий</th></tr></thead><tbody></tbody></table></div>
+            <h3>Acceptance Criteria (критерии приёмки)</h3>
+            <ul><li><strong>SR-SH-1:</strong> 99% заявок на вывод <10k USD завершаются за ≤30 мин в testnet.</li><li><strong>SR-SH-2:</strong> Нагрузочный тест: 1000 RPS на ключ без ошибок rate limiting.</li><li><strong>SR-SH-5:</strong> Инспекция HSM: все ключи генерируются внутри HSM, не покидают его.</li><li><strong>NFR-1:</strong> Мониторинг uptime за месяц: Trade API ≥99.99%, Withdraw API ≥99.95%.</li><li><strong>NFR-5:</strong> Тест k6: 50k concurrent, 10k RPS, p99 latency <200 мс, error <0.1%.</li></ul>
+            <h3>Согласованность требований</h3>
+            <div class="info-card"><ul><li><strong>SR-SH-1</strong> → SR-SYS-6 → NFR-2</li><li><strong>SR-SH-2</strong> → SR-SYS-4 → NFR-1, NFR-5</li><li><strong>SR-SH-3</strong> → SR-SYS-3, SR-SYS-8 → NFR-3, NFR-4</li><li><strong>SR-SH-4</strong> → SR-SYS-7 → NFR-2</li><li><strong>SR-SH-5</strong> → SR-SYS-1, SR-SYS-2 → NFR-2</li><li><strong>SR-SH-6</strong> → SR-SYS-5, SR-SYS-9 → —</li><li><strong>SR-SH-7</strong> → SR-SYS-10, SR-SYS-12 → NFR-1, NFR-5</li></ul></div>
+        </section>
 
-            <!-- 3. ТРЕБОВАНИЯ -->
-            <section id="requirements" class="section">
-                <h2>3. Требования</h2>
-                <div class="filter-bar" id="req-filter-bar"></div>
-                <div class="table-container">
-                    <table id="requirements-table">
-                        <thead><tr><th>ID</th><th>Тип</th><th>Описание</th><th>Метрика / Критерий (измеримый)</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-                <h3>Acceptance Criteria (критерии приёмки)</h3>
-                <div id="acceptance-criteria"></div>
-                <h3>Согласованность требований (трассировка stakeholder → system → NFR)</h3>
-                <div id="req-traceability-info"></div>
-            </section>
+        <!-- 4. Архитектура -->
+        <section id="architecture" class="section">
+            <h2>4. Архитектура</h2>
+            <h3>4.1 Модель архитектуры (C4 Container diagram)</h3>
+            <div class="diagram-container"><div class="mermaid" id="c4-diagram">C4Context
+              Person(trader, "Трейдер")
+              Person(mm, "Маркет-мейкер")
+              System_Boundary(rs, "RocketSpot Platform") {
+                Container(web, "Web UI", "React")
+                Container(gateway, "API Gateway", "Kong/Traefik")
+                Container(matching, "Matching Engine", "Rust/C++")
+                Container(account, "Account & Ledger", "Java/Spring")
+                Container(orchestrator, "Wallet Orchestrator", "Go+Temporal")
+                Container(aml, "AML Risk Engine", "Python/FastAPI")
+                Container(hsmAdapter, "HSM Adapter", "C++/C#")
+                Container(audit, "Audit & Forensics", "Elasticsearch")
+              }
+              ContainerDb(pg, "PostgreSQL", "OLTP")
+              ContainerDb(kafka, "Kafka", "События")
+              System_Ext(hsm, "HSM Cluster (КриптоПро)")
+              System_Ext(bc, "Блокчейн-ноды (BTC/ETH/TRON)")
+              System_Ext(siem, "SIEM (MaxPatrol)")
+              Rel(trader, gateway, "HTTPS/REST")
+              Rel(mm, gateway, "WebSocket/gRPC")
+              Rel(gateway, matching, "gRPC")
+              Rel(gateway, orchestrator, "REST")
+              Rel(orchestrator, aml, "gRPC")
+              Rel(orchestrator, hsmAdapter, "gRPC/PKCS#11")
+              Rel(hsmAdapter, hsm, "TCP/TLS")
+              Rel(orchestrator, bc, "JSON-RPC")
+              Rel(account, pg, "SQL")
+              Rel(orchestrator, kafka, "TCP")
+              Rel(kafka, audit, "TCP")
+              Rel(audit, siem, "Syslog")
+            </div></div>
+            <h3>4.2 Декомпозиция компонентов</h3>
+            <ul><li>Web UI / Mobile Backend</li><li>API Gateway (Kong/Traefik)</li><li>Matching Engine (Rust/C++)</li><li>Account & Ledger (Java/Spring)</li><li>Orchestrator (Go+Temporal)</li><li>HSM Adapter (C++/C#)</li><li>AML Risk Engine (Python/FastAPI)</li><li>KMS (Go)</li><li>Audit & Forensics (Elasticsearch WORM)</li></ul>
+            <h3>4.3 Взаимодействие компонентов</h3>
+            <div class="table-container"><table><thead><tr><th>Отправитель</th><th>Получатель</th><th>Протокол</th><th>Описание</th></tr></thead><tbody>
+                <tr><td>Web UI</td><td>API Gateway</td><td>HTTPS/REST</td><td>Запросы</td></tr>
+                <tr><td>API Gateway</td><td>Matching Engine</td><td>gRPC</td><td>Ордера</td></tr>
+                <tr><td>API Gateway</td><td>Orchestrator</td><td>REST</td><td>Вывод</td></tr>
+                <tr><td>Orchestrator</td><td>AML</td><td>gRPC</td><td>Скоринг</td></tr>
+                <tr><td>Orchestrator</td><td>HSM Adapter</td><td>gRPC/PKCS#11</td><td>Подпись</td></tr>
+                <tr><td>HSM Adapter</td><td>HSM</td><td>TCP/TLS</td><td>Криптооперации</td></tr>
+                <tr><td>Orchestrator</td><td>Blockchain</td><td>JSON-RPC</td><td>Broadcast</td></tr>
+                <tr><td>Account</td><td>PostgreSQL</td><td>SQL</td><td>Балансы</td></tr>
+                <tr><td>Все сервисы</td><td>Kafka</td><td>TCP</td><td>Аудит</td></tr>
+                <tr><td>Kafka</td><td>Audit</td><td>TCP</td><td>WORM</td></tr>
+            </tbody></table></div>
+            <h3>4.4 Архитектурные решения (ADR) с альтернативами</h3>
+            <div class="info-card"><h4>ADR-1: HSM для ключей</h4><p><strong>Контекст:</strong> Соответствие 115-ФЗ, ГОСТ</p><p><strong>Решение:</strong> КриптоПро on-premise кластер</p><p><strong>Альтернативы:</strong> Vault (не соответствует 115-ФЗ), Cloud HSM (нет сертификации)</p><p><strong>Trade-off:</strong> +40% бюджета vs защищённость</p></div>
+            <div class="info-card"><h4>ADR-2: Saga Pattern (Temporal)</h4><p><strong>Контекст:</strong> Длительные операции вывода</p><p><strong>Решение:</strong> Temporal.io</p><p><strong>Альтернативы:</strong> Camunda (тяжеловесная), ручная Kafka (сложно)</p><p><strong>Trade-off:</strong> Сложность отладки vs гарантия финишности</p></div>
+            <div class="info-card"><h4>ADR-3: Изоляция движка и кошельков</h4><p><strong>Контекст:</strong> Производительность vs безопасность</p><p><strong>Решение:</strong> Физическое разделение, Kafka</p><p><strong>Альтернативы:</strong> Монолит (риск lateral movement), синхронные REST (задержки)</p><p><strong>Trade-off:</strong> +50 мс latency vs изоляция</p></div>
+            <div class="info-card"><h4>ADR-4: PostgreSQL vs MongoDB</h4><p><strong>Контекст:</strong> ACID для финансов</p><p><strong>Решение:</strong> PostgreSQL 15+</p><p><strong>Альтернативы:</strong> MongoDB (слабая ACID), CockroachDB (избыточна)</p><p><strong>Trade-off:</strong> Меньшая горизонтальная запись vs консистентность</p></div>
+            <div class="info-card"><h4>ADR-5: Kafka vs RabbitMQ</h4><p><strong>Контекст:</strong> Высокая пропускная способность</p><p><strong>Решение:</strong> Apache Kafka</p><p><strong>Альтернативы:</strong> RabbitMQ (меньше пропускная), Kinesis (vendor lock-in)</p><p><strong>Trade-off:</strong> Сложнее настройка vs replayability</p></div>
+            <div class="info-card"><h4>ADR-6: Kubernetes vs Nomad</h4><p><strong>Контекст:</strong> Гибридное облако + on-premise</p><p><strong>Решение:</strong> Kubernetes</p><p><strong>Альтернативы:</strong> Nomad (проще, но меньше экосистема), Swarm (недостаточно)</p><p><strong>Trade-off:</strong> Высокая сложность vs стандарт</p></div>
+            <h3>4.5 Технологический стек</h3>
+            <div class="table-container"><table><thead><tr><th>Компонент</th><th>Стек</th><th>Обоснование</th></tr></thead><tbody>
+                <tr><td>Торговый движок</td><td>Rust / C++</td><td>Производительность, p99 <10 мс</td></tr>
+                <tr><td>Оркестратор</td><td>Go + Temporal</td><td>Saga, устойчивость</td></tr>
+                <tr><td>API Gateway</td><td>Kong</td><td>Rate limiting, JWT</td></tr>
+                <tr><td>Ledger</td><td>Java + Spring</td><td>ACID, транзакционность</td></tr>
+                <tr><td>AML</td><td>Python/FastAPI</td><td>ML-экосистема</td></tr>
+                <tr><td>HSM Adapter</td><td>C++/C#</td><td>PKCS#11, ГОСТ</td></tr>
+                <tr><td>БД</td><td>PostgreSQL 15+</td><td>ACID, JSONB</td></tr>
+                <tr><td>Очереди</td><td>Apache Kafka</td><td>At-least-once, replay</td></tr>
+                <tr><td>HSM</td><td>КриптоПро</td><td>Сертификация ФСБ</td></tr>
+            </tbody></table></div>
+        </section>
 
-            <!-- 4. АРХИТЕКТУРА -->
-            <section id="architecture" class="section">
-                <h2>4. Архитектура</h2>
-                <h3>4.1 Модель архитектуры (C4 Container diagram)</h3>
-                <div class="diagram-container">
-                    <div class="mermaid" id="c4-container-diagram">
-                        C4Context
-                          title Container diagram for RocketSpot
-                          Person(trader, "Трейдер", "Пользователь")
-                          Person(mm, "Маркет-мейкер", "Алгоритмический трейдер")
-                          Person(compliance, "Compliance-офицер", "Внутренний пользователь")
-                          Person(treasury, "Казначей", "Внутренний пользователь")
-                          
-                          System_Boundary(rs, "RocketSpot Platform") {
-                            Container(web, "Web UI", "React", "Интерфейс пользователя")
-                            Container(gateway, "API Gateway", "Kong/Traefik", "Маршрутизация, rate limiting, IP whitelist")
-                            Container(matching, "Matching Engine", "Rust/C++", "Высокопроизводительный движок ордеров")
-                            Container(account, "Account & Ledger", "Java/Spring", "Управление балансами, двойная запись")
-                            Container(orchestrator, "Wallet Orchestrator", "Go + Temporal", "Сага для вывода средств")
-                            Container(aml, "AML Risk Engine", "Python/FastAPI", "Скоринг, проверка санкций")
-                            Container(hsmAdapter, "HSM Adapter", "C++/C#", "PKCS#11 для КриптоПро")
-                            Container(audit, "Audit & Forensics", "Elasticsearch", "WORM-хранилище")
-                          }
-                          
-                          ContainerDb(pg, "PostgreSQL", "OLTP", "Балансы, транзакции")
-                          ContainerDb(kafka, "Kafka", "События", "Аудит, метрики")
-                          
-                          System_Ext(hsm, "HSM Cluster (КриптоПро)", "Аппаратная защита ключей")
-                          System_Ext(bc, "Блокчейн-ноды (BTC/ETH/TRON)", "Внешние сети")
-                          System_Ext(siem, "SIEM (MaxPatrol)", "События безопасности")
-                          
-                          Rel(trader, gateway, "HTTPS/REST", "Использует")
-                          Rel(mm, gateway, "WebSocket/gRPC", "Использует")
-                          Rel(compliance, gateway, "HTTPS", "Управление лимитами")
-                          Rel(treasury, gateway, "HTTPS", "Мультиподпись")
-                          
-                          Rel(gateway, matching, "gRPC", "Ордера")
-                          Rel(gateway, orchestrator, "REST", "Заявки на вывод")
-                          Rel(orchestrator, aml, "gRPC", "Проверка рисков")
-                          Rel(orchestrator, hsmAdapter, "gRPC/PKCS#11", "Подпись")
-                          Rel(hsmAdapter, hsm, "TCP/TLS", "Криптооперации")
-                          Rel(orchestrator, bc, "JSON-RPC", "Broadcast")
-                          Rel(account, pg, "SQL", "ACID")
-                          Rel(orchestrator, kafka, "TCP", "События")
-                          Rel(kafka, audit, "TCP", "Запись в WORM")
-                          Rel(audit, siem, "Syslog", "Экспорт")
-                    </div>
-                </div>
-                <h3>4.2 Декомпозиция компонентов</h3>
-                <ul id="arch-components-list"></ul>
-                <h3>4.3 Взаимодействие компонентов</h3>
-                <div class="table-container">
-                    <table id="interactions-table">
-                        <thead><tr><th>Отправитель</th><th>Получатель</th><th>Протокол</th><th>Описание</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-                <h3>4.4 Архитектурные решения (ADR) с альтернативами</h3>
-                <div id="adr-list"></div>
-                <h3>4.5 Технологический стек</h3>
-                <div class="table-container">
-                    <table id="tech-stack-table">
-                        <thead><tr><th>Компонент</th><th>Язык / Фреймворк</th><th>Обоснование</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
+        <!-- 5. Интерфейсы -->
+        <section id="api" class="section">
+            <h2>5. Интерфейсы (ICD-lite)</h2>
+            <h3>POST /api/v2/withdraw</h3>
+            <div class="api-block"><pre>{
+  "currency": "BTC",
+  "address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+  "amount": "0.5",
+  "network": "BTC",
+  "twofa_code": "123456"
+}</pre><p><strong>Idempotency-Key</strong> обязателен. Retry: экспоненциальная задержка 1с,2с,4с до 3 попыток.</p><h4>Коды ответов:</h4><ul><li>202 – принято</li><li>400 – неверный формат</li><li>401 – неверная подпись/2FA</li><li>403 – недостаточно прав</li><li>409 – дублирование Idempotency-Key</li><li>422 – AML риск / IP не в белом списке</li><li>429 – rate limit</li><li>500 – внутренняя ошибка</li><li>503 – сервис недоступен</li></ul></div>
+            <h3>Событие: TransactionSignedEvent</h3>
+            <div class="api-block"><pre>{
+  "event_id": "evt-123",
+  "event_type": "transaction.signed.v1",
+  "occurred_at": "2023-10-27T10:25:00Z",
+  "withdrawal_id": "wd-123e4567-e89b-12d3-a456-426614174000",
+  "tx_hash": "0x123...abc",
+  "signed_at": "...",
+  "signer": "hsm-cluster-01",
+  "signature_type": "ГОСТ Р 34.10-2021",
+  "correlation_id": "corr-456"
+}</pre><p>Idempotency по полю <code>event_id</code>. Событие публикуется в Kafka.</p></div>
+        </section>
 
-            <!-- 5. ИНТЕРФЕЙСЫ (ICD) -->
-            <section id="api" class="section">
-                <h2>5. Интерфейсы (ICD-lite)</h2>
-                <h3>POST /api/v2/withdraw</h3>
-                <div id="api-withdraw"></div>
-                <h3>Событие: TransactionSignedEvent</h3>
-                <div id="api-event"></div>
-            </section>
+        <!-- 6. Риски -->
+        <section id="risks" class="section">
+            <h2>6. Реестр рисков</h2>
+            <div class="table-container"><table><thead><tr><th>ID</th><th>Риск</th><th>Вероятность</th><th>Влияние</th><th>Приоритет</th><th>Меры предотвращения</th><th>Остаточный риск</th></tr></thead><tbody>
+                <tr><td><strong>R-01</strong></td><td>Утечка ключей горячего кошелька</td><td><span class="badge badge-green">Низкая</span></td><td><span class="badge badge-red">Критическое</span></td><td><span class="badge badge-yellow">3</span></td><td>HSM, ротация каждые 24ч, sweep в cold storage</td><td>Низкий</td></tr>
+                <tr><td><strong>R-02</strong></td><td>51% атака на сеть блокчейна</td><td><span class="badge badge-yellow">Средняя</span></td><td><span class="badge badge-yellow">Высокое</span></td><td><span class="badge badge-red">6</span></td><td>Увеличенное количество подтверждений (BTC 6+, ETH 30+)</td><td>Средний</td></tr>
+                <tr><td><strong>R-03</strong></td><td>Ошибка оркестратора (дублирование отправки)</td><td><span class="badge badge-green">Низкая</span></td><td><span class="badge badge-yellow">Высокое</span></td><td><span class="badge badge-yellow">3</span></td><td>Идемпотентность, Temporal</td><td>Низкий</td></tr>
+                <tr><td><strong>R-04</strong></td><td>Заморозка средств регулятором</td><td><span class="badge badge-yellow">Средняя</span></td><td><span class="badge badge-green">Среднее</span></td><td><span class="badge badge-yellow">4</span></td><td>Автоматизация отчётности по 115-ФЗ, compliance 24/7</td><td>Средний</td></tr>
+                <tr><td><strong>R-05</strong></td><td>Атака на API-ключи трейдера (фишинг)</td><td><span class="badge badge-yellow">Средняя</span></td><td><span class="badge badge-green">Среднее</span></td><td><span class="badge badge-yellow">4</span></td><td>IP whitelist для withdraw, 2FA, мониторинг аномалий</td><td>Низкий-Средний</td></tr>
+            </tbody></table></div>
+        </section>
 
-            <!-- 6. РИСКИ -->
-            <section id="risks" class="section">
-                <h2>6. Реестр рисков</h2>
-                <div class="table-container">
-                    <table id="risks-table">
-                        <thead><tr><th>ID</th><th>Риск</th><th>Вероятность</th><th>Влияние</th><th>Приоритет</th><th>Меры предотвращения</th><th>Остаточный риск</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
+        <!-- 7. V&V -->
+        <section id="vandv" class="section">
+            <h2>7. Validation & Verification</h2>
+            <h3>Тест-кейсы (10)</h3>
+            <div class="info-card"><h4>TC-WD-001: Автоматический вывод low-risk суммы</h4><p><strong>Цель:</strong> Проверка успешного low-risk вывода через HSM</p><p><strong>Ожидаемый результат:</strong> completed за 2 минуты, аудит</p><p><strong>Метод:</strong> Test — E2E testnet</p></div>
+            <div class="info-card"><h4>TC-AML-001: Блокировка вывода по AML (санкционный адрес)</h4><p><strong>Цель:</strong> Проверка блокировки</p><p><strong>Ожидаемый результат:</strong> blocked_aml, алерт в SIEM</p><p><strong>Метод:</strong> Test — интеграционный тест</p></div>
+            <div class="info-card"><h4>TC-CLD-001: Мультиподпись для вывода из холодного кошелька</h4><p><strong>Цель:</strong> Проверка M-of-N</p><p><strong>Ожидаемый результат:</strong> транзакция после 2 подтверждений</p><p><strong>Метод:</strong> Demo — демонстрация казначеям</p></div>
+            <div class="info-card"><h4>TC-FAIL-001: Отказ HSM (деградация)</h4><p><strong>Цель:</strong> Проверка поведения при недоступности HSM</p><p><strong>Ожидаемый результат:</strong> pending_hsm, retry</p><p><strong>Метод:</strong> Test — fault injection</p></div>
+            <div class="info-card"><h4>TC-API-001: API-ключ с правами на вывод без IP-привязки</h4><p><strong>Цель:</strong> Проверка отклонения</p><p><strong>Ожидаемый результат:</strong> 422, ключ не создан</p><p><strong>Метод:</strong> Test — юнит-тест</p></div>
+            <div class="info-card"><h4>TC-SEC-001: Аварийная блокировка (Kill Switch)</h4><p><strong>Цель:</strong> Проверка экстренной блокировки</p><p><strong>Ожидаемый результат:</strong> 503, заявки frozen</p><p><strong>Метод:</strong> Demo — демо для SecOps</p></div>
+            <div class="info-card"><h4>TC-PERF-001: Нагрузочное тестирование торгового API</h4><p><strong>Цель:</strong> Проверка latency под пиковой нагрузкой</p><p><strong>Ожидаемый результат:</strong> p99 <10 мс, error <0.01%</p><p><strong>Метод:</strong> Analysis — k6, 1000 concurrent</p></div>
+            <div class="info-card"><h4>TC-KMS-001: Ротация мастер-ключа HSM</h4><p><strong>Цель:</strong> Проверка dual-control ротации</p><p><strong>Ожидаемый результат:</strong> без downtime, аудит</p><p><strong>Метод:</strong> Demo+Inspection</p></div>
+            <div class="info-card"><h4>TC-DR-001: Восстановление после сбоя БД (RPO/RTO)</h4><p><strong>Цель:</strong> Проверка аварийного восстановления</p><p><strong>Ожидаемый результат:</strong> RTO <15 мин, RPO <1 мин</p><p><strong>Метод:</strong> Test — Patroni failover</p></div>
+            <div class="info-card"><h4>TC-HSM-001: Интеграционное тестирование с КриптоПро HSM</h4><p><strong>Цель:</strong> Проверка подписи по ГОСТ</p><p><strong>Ожидаемый результат:</strong> подпись валидна, <500 мс</p><p><strong>Метод:</strong> Test+Inspection</p></div>
+            <h3>Матрица верификации</h3>
+            <div class="table-container"><table><thead><tr><th>Требование</th><th>Метод верификации</th><th>Артефакт</th></tr></thead><tbody>
+                <tr><td>SR-SH-1 (скорость вывода)</td><td>E2E тестирование</td><td>TC-WD-001, отчёт p99 ≤30 мин</td></tr>
+                <tr><td>SR-SH-2 (RPS)</td><td>Нагрузочное тестирование</td><td>TC-PERF-001, 1000 RPS</td></tr>
+                <tr><td>SR-SH-5 (HSM ключи)</td><td>Инспекция + интеграционный тест</td><td>TC-HSM-001, аудит генерации</td></tr>
+                <tr><td>NFR-1 (доступность)</td><td>Анализ мониторинга</td><td>Uptime ≥99.95%/99.99%</td></tr>
+                <tr><td>NFR-5 (масштабируемость)</td><td>Нагрузочное тестирование</td><td>k6: 50k concurrent, 10k RPS, p99 <200 мс</td></tr>
+            </tbody></table></div>
+            <h3>Матрица трассируемости требований и тест-кейсов</h3>
+            <div class="table-container"><table id="trace-table"><thead><tr><th>Требование</th><th>TC-01</th><th>TC-02</th><th>TC-03</th><th>TC-04</th><th>TC-05</th><th>TC-06</th><th>TC-07</th><th>TC-08</th><th>TC-09</th><th>TC-10</th></tr></thead><tbody id="trace-body"></tbody></table></div>
+        </section>
 
-            <!-- 7. V&V -->
-            <section id="vandv" class="section">
-                <h2>7. Validation & Verification (V&V)</h2>
-                <h3>Тест-кейсы (10)</h3>
-                <div id="testcases-list"></div>
-                <h3>Матрица верификации (требование → метод → артефакт)</h3>
-                <div class="table-container">
-                    <table id="verification-matrix">
-                        <thead><tr><th>Требование</th><th>Метод верификации</th><th>Артефакт / Критерий</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-                <h3>Матрица трассируемости требований и тест-кейсов</h3>
-                <div class="table-container">
-                    <table id="traceability-table">
-                        <thead><tr><th>Требование</th><th>TC-01</th><th>TC-02</th><th>TC-03</th><th>TC-04</th><th>TC-05</th><th>TC-06</th><th>TC-07</th><th>TC-08</th><th>TC-09</th><th>TC-10</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- ГЛОССАРИЙ -->
-            <section id="glossary" class="section">
-                <h2>Глоссарий унифицированных терминов</h2>
-                <div class="table-container">
-                    <table id="glossary-table">
-                        <thead><tr><th>Термин</th><th>Определение</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </section>
-        </main>
-    </div>
-    <script src="data.js"></script>
-    <script src="script.js"></script>
-    <script>
-        feather.replace();
-        mermaid.initialize({ 
-            startOnLoad: true, 
-            theme: 'dark',
-            themeVariables: {
-                'background': '#161b22',
-                'primaryColor': '#1f6feb',
-                'primaryTextColor': '#c9d1d9',
-                'primaryBorderColor': '#30363d',
-                'lineColor': '#8b949e',
-                'secondaryColor': '#21262d',
-                'tertiaryColor': '#0d1117'
-            },
-            flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
-            c4: { useMaxWidth: true, boundary: true }
+        <!-- Глоссарий -->
+        <section id="glossary" class="section">
+            <h2>Глоссарий унифицированных терминов</h2>
+            <div class="table-container"><table><thead><tr><th>Термин</th><th>Определение</th></tr></thead><tbody>
+                <tr><td><strong>Compliance (комплаенс)</strong></td><td>Отдел соответствия требованиям 115-ФЗ и AML/CFT.</td></tr>
+                <tr><td><strong>Legal (юридический отдел)</strong></td><td>Отдел, отвечающий за правовые вопросы и взаимодействие с регуляторами.</td></tr>
+                <tr><td><strong>AML/CFT</strong></td><td>Противодействие легализации доходов / финансированию терроризма.</td></tr>
+                <tr><td><strong>Platform Engineering</strong></td><td>Команда, разрабатывающая и поддерживающая внутреннюю платформу (инфраструктура, базовые сервисы).</td></tr>
+                <tr><td><strong>DevOps</strong></td><td>Роль, отвечающая за автоматизацию развертывания приложений, мониторинг и пайплайны CI/CD.</td></tr>
+                <tr><td><strong>HSM (Hardware Security Module)</strong></td><td>Аппаратный модуль безопасности. В проекте – on-premise кластер КриптоПро, сертифицированный ФСБ.</td></tr>
+                <tr><td><strong>Tenant isolation</strong></td><td>Логическая изоляция данных разных клиентов на уровне namespace и RBAC.</td></tr>
+                <tr><td><strong>M-of-N (мультиподпись)</strong></td><td>Схема, требующая M подписей из N возможных для совершения транзакции.</td></tr>
+                <tr><td><strong>RPS (Requests Per Second)</strong></td><td>Количество запросов в секунду, выдерживаемое системой.</td></tr>
+                <tr><td><strong>SLA (Service Level Agreement)</strong></td><td>Соглашение об уровне обслуживания, например, доступность 99.95%.</td></tr>
+                <tr><td><strong>Retention</strong></td><td>Срок хранения данных (например, аудиторских журналов – 7 лет).</td></tr>
+                <tr><td><strong>Throughput</strong></td><td>Пропускная способность системы (событий в секунду).</td></tr>
+                <tr><td><strong>Latency p99</strong></td><td>99-й перцентиль задержки – значение, ниже которого находятся 99% запросов.</td></tr>
+                <tr><td><strong>WORM (Write Once Read Many)</strong></td><td>Режим хранения, гарантирующий неизменность данных после записи.</td></tr>
+            </tbody></table></div>
+        </section>
+    </main>
+</div>
+<script>
+    // Навигация
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const sectionId = item.dataset.section;
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+            document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
         });
-    </script>
+    });
+
+    // Данные для требований
+    const requirementsData = [
+        { id: 'SR-SH-1', type: 'SR-SH', desc: 'Скорость вывода low-risk', metric: '≤30 мин (p99)' },
+        { id: 'SR-SH-2', type: 'SR-SH', desc: 'Rate limit API', metric: '1000+ RPS, SLA 99.99%' },
+        { id: 'SR-SH-3', type: 'SR-SH', desc: 'Блокировка счёта real-time', metric: '≤5 сек' },
+        { id: 'SR-SH-4', type: 'SR-SH', desc: 'M-of-N для cold storage', metric: 'M=2 из N=3' },
+        { id: 'SR-SH-5', type: 'SR-SH', desc: 'Ключи в HSM', metric: 'HSM on-premise кластер' },
+        { id: 'SR-SH-6', type: 'SR-SH', desc: 'Отчёт по транзакции', metric: 'WORM, retention 7 лет' },
+        { id: 'SR-SH-7', type: 'SR-SH', desc: 'Отказоустойчивость', metric: 'RTO <15 мин, RPO <1 мин' },
+        { id: 'SR-SYS-1', type: 'SR-SYS', desc: 'Взаимодействие через HSM', metric: 'p99 latency <500 мс' },
+        { id: 'SR-SYS-2', type: 'SR-SYS', desc: 'Ротация ключей', metric: '≤1 год, dual control' },
+        { id: 'SR-SYS-3', type: 'SR-SYS', desc: 'Проверка санкционных списков', metric: '<100 мс' },
+        { id: 'SR-SYS-4', type: 'SR-SYS', desc: 'API-ключи с scopes', metric: 'IP whitelist для withdraw' },
+        { id: 'SR-SYS-5', type: 'SR-SYS', desc: 'Аудит в WORM', metric: 'Throughput 10k/сек, retention 7 лет' },
+        { id: 'SR-SYS-6', type: 'SR-SYS', desc: '2FA на вывод', metric: 'p99 <30 сек' },
+        { id: 'SR-SYS-7', type: 'SR-SYS', desc: 'Batch-транзакции', metric: 'до 100 outputs' },
+        { id: 'SR-SYS-8', type: 'SR-SYS', desc: 'Аномальная активность', metric: 'False positive <0.5%' },
+        { id: 'SR-SYS-9', type: 'SR-SYS', desc: 'correlation_id', metric: 'обязательный header' },
+        { id: 'SR-SYS-10', type: 'SR-SYS', desc: 'Graceful shutdown', metric: 'таймаут 30 сек' },
+        { id: 'SR-SYS-11', type: 'SR-SYS', desc: 'Сессия администратора', metric: '4 часа, затем MFA' },
+        { id: 'SR-SYS-12', type: 'SR-SYS', desc: 'Резервное копирование БД', metric: 'каждые 6 часов' },
+        { id: 'NFR-1', type: 'NFR', desc: 'Доступность', metric: 'Trade 99.99%, Withdraw 99.95%' },
+        { id: 'NFR-2', type: 'NFR', desc: 'Время подписи HSM', metric: 'p99 <500 мс' },
+        { id: 'NFR-3', type: 'NFR', desc: 'Kill-switch', metric: '≤5 сек' },
+        { id: 'NFR-4', type: 'NFR', desc: 'False positive AML', metric: '<0.5%' },
+        { id: 'NFR-5', type: 'NFR', desc: 'Масштабируемость', metric: '1000 tx/мин, 50k concurrent, 10k RPS, p99 <200 мс' }
+    ];
+    const typeNames = { 'SR-SH': 'Stakeholder', 'SR-SYS': 'System', 'NFR': 'NFR' };
+    const typeColors = { 'SR-SH': 'blue', 'SR-SYS': 'green', 'NFR': 'yellow' };
+    function renderRequirements(filter = 'all') {
+        const tbody = document.querySelector('#requirements-table tbody');
+        if (!tbody) return;
+        const filtered = filter === 'all' ? requirementsData : requirementsData.filter(r => r.type === filter);
+        tbody.innerHTML = filtered.map(r => `
+            <tr>
+                <td><strong>${r.id}</strong></td>
+                <td><span class="badge badge-${typeColors[r.type]}">${typeNames[r.type]}</span></td>
+                <td>${r.desc}</td>
+                <td>${r.metric}</td>
+            </tr>
+        `).join('');
+    }
+    // Фильтры требований
+    const filterBar = document.getElementById('req-filter-bar');
+    if (filterBar) {
+        const filters = ['all', 'SR-SH', 'SR-SYS', 'NFR'];
+        filters.forEach(f => {
+            const btn = document.createElement('button');
+            btn.className = 'filter-btn' + (f === 'all' ? ' active' : '');
+            btn.textContent = f === 'all' ? 'Все (24)' : (f === 'SR-SH' ? 'Stakeholder (7)' : (f === 'SR-SYS' ? 'System (12)' : 'NFR (5)'));
+            btn.dataset.type = f;
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#req-filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderRequirements(f);
+            });
+            filterBar.appendChild(btn);
+        });
+    }
+    renderRequirements('all');
+
+    // Матрица трассируемости
+    const traceData = [
+        { req: 'SR-SH-1', tc: [true,false,false,false,false,false,false,false,false,false] },
+        { req: 'SR-SH-2', tc: [false,false,false,false,true,false,true,false,false,false] },
+        { req: 'SR-SH-3', tc: [false,true,false,false,false,true,false,false,false,false] },
+        { req: 'SR-SH-4', tc: [false,false,true,false,false,false,false,false,false,false] },
+        { req: 'SR-SH-5', tc: [true,false,false,true,false,false,false,true,false,true] },
+        { req: 'SR-SH-6', tc: [true,true,true,true,true,true,false,true,true,true] },
+        { req: 'SR-SH-7', tc: [false,false,false,false,false,false,true,false,true,false] },
+        { req: 'NFR-1', tc: [false,false,false,false,false,false,true,false,true,false] },
+        { req: 'NFR-2', tc: [true,false,false,false,false,false,true,false,false,true] },
+        { req: 'NFR-3', tc: [false,false,false,false,false,true,false,false,false,false] },
+        { req: 'NFR-4', tc: [false,true,false,false,false,false,false,false,false,false] },
+        { req: 'NFR-5', tc: [false,false,false,false,false,false,true,false,false,false] }
+    ];
+    const traceBody = document.getElementById('trace-body');
+    if (traceBody) {
+        traceBody.innerHTML = traceData.map(t => `
+            <tr>
+                <td><strong>${t.req}</strong></td>
+                ${t.tc.map(v => `<td class="traceability-check">${v ? '✓' : ''}</td>`).join('')}
+            </tr>
+        `).join('');
+    }
+
+    // Инициализация Mermaid для C4 диаграммы
+    if (typeof mermaid !== 'undefined') {
+        mermaid.initialize({ startOnLoad: true, theme: 'dark', themeVariables: { background: '#161b22', primaryColor: '#1f6feb', primaryTextColor: '#c9d1d9', primaryBorderColor: '#30363d', lineColor: '#8b949e', secondaryColor: '#21262d', tertiaryColor: '#0d1117' }, flowchart: { useMaxWidth: true, htmlLabels: true }, c4: { useMaxWidth: true, boundary: true } });
+        setTimeout(() => mermaid.contentLoaded(), 100);
+    }
+    feather.replace();
+</script>
 </body>
 </html>
