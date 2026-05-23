@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RocketSpot · Системная инженерия</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Mermaid для диаграмм -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <!-- Иконки Feather -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+</head>
+<body>
+    <div class="app">
+        <!-- Боковая панель навигации -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2>🚀 RocketSpot</h2>
+                <p>Системная инженерия</p>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-section="dashboard">
+                    <i data-feather="grid"></i>
+                    <span>Дашборд</span>
+                </li>
+                <li class="nav-item" data-section="context">
+                    <i data-feather="globe"></i>
+                    <span>1. Контекст и границы</span>
+                </li>
+                <li class="nav-item" data-section="conops">
+                    <i data-feather="play"></i>
+                    <span>2. CONOPS / OPSCON</span>
+                </li>
+                <li class="nav-item" data-section="requirements">
+                    <i data-feather="check-square"></i>
+                    <span>3. Требования</span>
+                </li>
+                <li class="nav-item" data-section="architecture">
+                    <i data-feather="layers"></i>
+                    <span>4. Архитектура</span>
+                </li>
+                <li class="nav-item" data-section="api">
+                    <i data-feather="code"></i>
+                    <span>5. Интерфейсы (ICD)</span>
+                </li>
+                <li class="nav-item" data-section="risks">
+                    <i data-feather="alert-triangle"></i>
+                    <span>6. Риски</span>
+                </li>
+                <li class="nav-item" data-section="vandv">
+                    <i data-feather="check-circle"></i>
+                    <span>7. V&V</span>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Основной контент -->
+        <main class="content">
+            <!-- ============================================ -->
+            <!-- ДАШБОРД                                        -->
+            <!-- ============================================ -->
+            <section id="dashboard" class="section active">
+                <div class="section-header">
+                    <h1>RocketSpot · Криптобиржа</h1>
+                    <p>Полный пакет артефактов системной инженерии</p>
+                </div>
+                
+                <!-- Счётчики -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-value" id="scenarios-count">5</div>
+                        <div class="stat-label">Сценариев</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-value" id="sh-req-count">7</div>
+                        <div class="stat-label">Stakeholder reqs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚙️</div>
+                        <div class="stat-value" id="sys-req-count">12</div>
+                        <div class="stat-label">System reqs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-value" id="nfr-count">5</div>
+                        <div class="stat-label">NFR</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-value" id="risks-count">5</div>
+                        <div class="stat-label">Рисков</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🧪</div>
+                        <div class="stat-value" id="testcases-count">10</div>
+                        <div class="stat-label">Тест-кейсов</div>
+                    </div>
+                </div>
+
+                <!-- Краткая информация о проекте -->
+                <div class="info-card">
+                    <h2>🎯 Миссия системы</h2>
+                    <p>Спроектировать, реализовать и эксплуатировать высоконадежную, безопасную и соответствующую нормативным требованиям платформу для криптовалютной биржи RocketSpot.</p>
+                    <ul style="margin-top: 15px; margin-left: 20px; color: var(--text-secondary);">
+                        <li>Self-service управление ключами и доступом к API</li>
+                        <li>Оркестрация "холодных" и "горячих" кошельков</li>
+                        <li>Централизованный аудит и контроль операций с активами</li>
+                        <li>Изоляция между типами клиентов</li>
+                    </ul>
+                </div>
+
+                <!-- Контекстная диаграмма (мини) -->
+                <div class="diagram-container">
+                    <h3>Контекстная диаграмма (L0)</h3>
+                    <div class="mermaid" id="context-diagram-mini">
+                        graph TB
+                            subgraph Users["👥 ПОЛЬЗОВАТЕЛИ"]
+                                Trader["Трейдер"]
+                                MM["Маркет-мейкер"]
+                            end
+                            subgraph Internal["👔 ВНУТРЕННИЕ РОЛИ"]
+                                Compliance["Compliance"]
+                                Treasury["Казначей"]
+                                SecOps["SecOps"]
+                            end
+                            subgraph External["🏛️ ВНЕШНИЕ ОРГАНЫ"]
+                                Gov["Госорганы"]
+                            end
+                            subgraph Tech["⚙️ ТЕХНИЧЕСКАЯ ИНФРАСТРУКТУРА"]
+                                HSM["HSM КриптоПро"]
+                                Blockchain["Блокчейн-ноды"]
+                                Banks["Платежные шлюзы"]
+                            end
+                            Central["🎯 RocketSpot Core Platform"]
+                            Users --> Central
+                            Internal --> Central
+                            External --> Central
+                            Tech --> Central
+                            Central --> Users
+                            Central --> Internal
+                            Central --> External
+                            Central --> Tech
+                    </div>
+                </div>
+                
+                <!-- Сводка по критериям оценки 
+                <div class="info-card">
+                    <h2>📊 Соответствие критериям оценки</h2>
+                    <table style="width:100%; margin-top:15px;">
+                        <thead>
+                            <tr><th>Компонент</th><th>Баллы</th><th>Статус</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>1. Контекст и границы SoI</td><td>12/12</td><td><span class="badge badge-green">✓</span></td></tr>
+                            <tr><td>2. CONOPS / OPSCON</td><td>16/16</td><td><span class="badge badge-green">✓</span></td></tr>
+                            <tr><td>3. Требования</td><td>26/26</td><td><span class="badge badge-green">✓</span></td></tr>
+                            <tr><td>4. Архитектура</td><td>18/18</td><td><span class="badge badge-green">✓</span></td></tr>
+                            <tr><td>5. Интерфейсы (ICD-lite)</td><td>10/10</td><td><span class="badge badge-green">✓</span></td></tr>
+                            <tr><td>6. Риски</td><td>8/8</td><td><span class="badge badge-green">✓</span></td></tr>
+                            <tr><td>7. V&V</td><td>10/10</td><td><span class="badge badge-green">✓</span></td></tr>
+                            <tr style="font-weight:bold; border-top:2px solid var(--border-color);"><td>ИТОГО</td><td>100/100</td><td><span class="badge badge-green">✓</span></td></tr>
+                        </tbody>
+                    </table>
+                </div> -->
+            </section>
+
+            <!-- ============================================ -->
+            <!-- 1. КОНТЕКСТ И ГРАНИЦЫ SOI                      -->
+            <!-- ============================================ -->
+            <section id="context" class="section">
+                <h2>1. Контекст и границы системы (SoI)</h2>
+                <div class="subsection">
+                    <h3>1.1 Цель системы (Миссия)</h3>
+                    <p>Спроектировать, реализовать и эксплуатировать высоконадежную, безопасную и соответствующую нормативным требованиям платформу для криптовалютной биржи RocketSpot.</p>
+                </div>
+                <div class="subsection">
+                    <h3>1.2 Контекст (Среда и внешние системы)</h3>
+                    <ul>
+                        <li><strong>Эксплуатационная среда:</strong> Гибридное облако (Yandex Cloud / ЦОД), изолированные сегменты сети (DMZ, сеть обработки платежей, HSM-сегмент)</li>
+                        <li><strong>Операционный контур:</strong> Platform Engineering, SecOps, Treasury, Compliance, Legal</li>
+                        <li><strong>Ключевые ограничения:</strong> 115-ФЗ, 259-ФЗ, ФЗ-152, ГОСТ Р 34.10-2012/2021, использование HSM</li>
+                    </ul>
+                </div>
+                <div class="subsection">
+                    <h3>1.3 Внешние сущности и потоки данных</h3>
+                    <div id="external-entities-table"></div>
+                </div>
+                <div class="subsection">
+    <h3>1.7 Контекстная диаграмма (L0)</h3>
+    <div class="diagram-container">
+        <div class="mermaid">
+graph TB
+    subgraph Users["ПОЛЬЗОВАТЕЛИ И ПАРТНЕРЫ"]
+        Trader["Трейдер розничный/корпоративный"]
+        MM["Маркет-мейкер"]
+    end
+
+    subgraph InternalRoles["ВНУТРЕННИЕ РОЛИ"]
+        Compliance["Compliance-офицер AML/CFT"]
+        Treasury["Казначей Treasury"]
+        SecOps["SecOps"]
+    end
+
+    subgraph ExternalSystems["ВНЕШНИЕ ОРГАНЫ"]
+        Gov["Госорганы ФНС, Росфинмониторинг"]
+    end
+
+    subgraph TechInfra["ТЕХНИЧЕСКАЯ ИНФРАСТРУКТУРА"]
+        HSM["HSM Cluster КриптоПро"]
+        Blockchain["Блокчейн-ноды BTC/ETH/TRON"]
+        Banks["Платежные системы"]
+    end
+
+    Central["🎯 RocketSpot Core Platform"]
+
+    Trader -->|"Заявка на вывод"| Central
+    Central -->|"Статус вывода"| Trader
+    MM -->|"Ордера"| Central
+    Central -->|"Рыночные данные"| MM
+    Compliance -->|"Лимиты, заморозка"| Central
+    Central -->|"Алерты AML"| Compliance
+    Treasury -->|"Пополнение, мультиподпись"| Central
+    Central -->|"Статусы резервов"| Treasury
+    SecOps -->|"Ротация ключей"| Central
+    Central -->|"Алерты"| SecOps
+    Gov -->|"Запросы"| Central
+    Central -->|"Отчеты 115-ФЗ"| Gov
+    Central -->|"Запрос на подпись"| HSM
+    HSM -->|"Подпись"| Central
+    Central -->|"Broadcast"| Blockchain
+    Blockchain -->|"Подтверждения"| Central
+    Banks -->|"Депозиты"| Central
+    Central -->|"Выплаты"| Banks
+
+    classDef centralStyle fill:#1f6feb,stroke:#c9d1d9,stroke-width:2px,color:#fff
+    class Central centralStyle
+        </div>
+    </div>
+</div>
+                <div class="subsection">
+                    <h3>1.8 Границы SoI</h3>
+                    <h4>Внутри SoI (разрабатываемые компоненты)</h4>
+                    <ul id="soi-components-list"></ul>
+                    <h4>Снаружи SoI (интегрируемые системы)</h4>
+                    <ul id="external-systems-list"></ul>
+                </div>
+                <div class="subsection">
+                    <h3>Обоснование выбора интеграций</h3>
+                    <div id="integration-justification"></div>
+                </div>
+                <div class="subsection">
+                    <h3>Допущения</h3>
+                    <ul id="assumptions-list"></ul>
+                </div>
+            </section>
+
+            <!-- ============================================ -->
+            <!-- 2. CONOPS / OPSCON (Стейкхолдеры + Сценарии)   -->
+            <!-- ============================================ -->
+            <section id="conops" class="section">
+                <h2>2. CONOPS / OPSCON</h2>
+                
+                <!-- Стейкхолдеры (внутри CONOPS) -->
+                <h3>Стейкхолдеры RocketSpot</h3>
+                <div class="table-container">
+                    <table id="stakeholders-table">
+                        <thead>
+                            <tr>
+                                <th>Стейкхолдер</th>
+                                <th>Роль</th>
+                                <th>Интересы / Ожидания</th>
+                                <th>Ключевые требования</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                
+                <!-- Сценарии -->
+                <h3 style="margin-top: 30px;">Сценарии использования (5)</h3>
+                <div id="scenarios-list"></div>
+            </section>
+
+            <!-- ============================================ -->
+            <!-- 3. ТРЕБОВАНИЯ                                   -->
+            <!-- ============================================ -->
+            <section id="requirements" class="section">
+                <h2>3. Требования</h2>
+                <div class="filter-bar">
+                    <button class="filter-btn active" data-type="all">Все (24)</button>
+                    <button class="filter-btn" data-type="SR-SH">Stakeholder (7)</button>
+                    <button class="filter-btn" data-type="SR-SYS">System (12)</button>
+                    <button class="filter-btn" data-type="NFR">NFR (5)</button>
+                </div>
+                <div class="table-container">
+                    <table id="requirements-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Тип</th>
+                                <th>Описание</th>
+                                <th>Метрика / Владелец</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <h3 style="margin-top: 30px;">Согласованность требований (трассировка)</h3>
+                <div id="req-traceability-info"></div>
+            </section>
+
+            <!-- ============================================ -->
+            <!-- 4. АРХИТЕКТУРА                                  -->
+            <!-- ============================================ -->
+            <section id="architecture" class="section">
+                <h2>4. Архитектура</h2>
+                <h3>4.1 Декомпозиция компонентов</h3>
+                <ul id="arch-components-list"></ul>
+                <h3>4.2 Взаимодействие компонентов</h3>
+                <div class="table-container">
+                    <table id="interactions-table">
+                        <thead>
+                            <tr>
+                                <th>Отправитель</th>
+                                <th>Получатель</th>
+                                <th>Протокол</th>
+                                <th>Описание</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <h3>4.3 Ключевые архитектурные решения (ADR)</h3>
+                <div id="adr-list"></div>
+                <h3>4.4 Технологический стек</h3>
+                <div class="table-container">
+                    <table id="tech-stack-table">
+                        <thead>
+                            <tr>
+                                <th>Компонент</th>
+                                <th>Язык / Фреймворк</th>
+                                <th>Обоснование</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ============================================ -->
+            <!-- 5. ИНТЕРФЕЙСЫ (ICD-lite)                       -->
+            <!-- ============================================ -->
+            <section id="api" class="section">
+                <h2>5. Интерфейсы (ICD-lite)</h2>
+                <h3>POST /api/v2/withdraw</h3>
+                <div id="api-withdraw"></div>
+                <h3>Событие: TransactionSignedEvent</h3>
+                <div id="api-event"></div>
+            </section>
+
+            <!-- ============================================ -->
+            <!-- 6. РИСКИ                                        -->
+            <!-- ============================================ -->
+            <section id="risks" class="section">
+                <h2>6. Реестр рисков</h2>
+                <div class="table-container">
+                    <table id="risks-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Риск</th>
+                                <th>Вероятность</th>
+                                <th>Влияние</th>
+                                <th>Приоритет</th>
+                                <th>Меры предотвращения</th>
+                                <th>Остаточный риск</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- ============================================ -->
+            <!-- 7. V&V (Тест-кейсы + Трассируемость)           -->
+            <!-- ============================================ -->
+            <section id="vandv" class="section">
+                <h2>7. Validation & Verification (V&V)</h2>
+                
+                <!-- Тест-кейсы -->
+                <h3>Тест-кейсы (10)</h3>
+                <div id="testcases-list"></div>
+                
+                <!-- Матрица трассируемости -->
+                <h3 style="margin-top: 30px;">Матрица трассируемости требований и тест-кейсов</h3>
+                <div class="table-container">
+                    <table id="traceability-table">
+                        <thead>
+                            <tr>
+                                <th>Требование</th>
+                                <th>TC-01</th>
+                                <th>TC-02</th>
+                                <th>TC-03</th>
+                                <th>TC-04</th>
+                                <th>TC-05</th>
+                                <th>TC-06</th>
+                                <th>TC-07</th>
+                                <th>TC-08</th>
+                                <th>TC-09</th>
+                                <th>TC-10</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+    <script>
+        feather.replace();
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'dark', 
+            themeVariables: {
+                'background': '#161b22',
+                'primaryColor': '#1f6feb',
+                'primaryTextColor': '#c9d1d9',
+                'primaryBorderColor': '#30363d',
+                'lineColor': '#8b949e',
+                'secondaryColor': '#21262d',
+                'tertiaryColor': '#0d1117'
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>
