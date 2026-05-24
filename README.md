@@ -1,82 +1,67 @@
 # 🚀 RocketSpot — учебный проект по системной инженерии
 
 **Добро пожаловать!**  
-Этот репозиторий создан в рамках учебного курса по системной инженерии. Здесь мы проектируем **российскую криптобиржу RocketSpot** — от требований до тестовых сценариев.
+Этот репозиторий создан в рамках учебного курса по системной инженерии. Здесь проектируется российская криптобиржа RocketSpot — от stakeholder requirements до архитектуры, V&V и traceability.
 
 ---
 
-## 📖 Что вы найдёте здесь?
+## 📖 Что включено в проект
 
-- **1 работа (Главное задание)** - https://vilagcraft.github.io/System_Engineering_Akutin_2sem/
-- **2 работа (Презентация)** - https://github.com/Vilagcraft/System_Engineering_Akutin_2sem/blob/main/src/2%20%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B0%20RocketSpot.pdf
-- **Контекст и границы системы** — кто взаимодействует с биржей и какие компоненты мы разрабатываем.
-- **CONOPS / OPSCON** — как система работает: роли, сценарии вывода криптовалюты, деградации.
-- **Стейкхолдеры** — кто заинтересован в работе биржи (трейдеры, маркет-мейкеры, compliance, казначей, SecOps, регуляторы).
-- **Технологический стек** — Rust, Go, React, PostgreSQL, Temporal, Kafka, HSM (КриптоПро).
-- **Тест-кейсы** — 10 сквозных сценариев: от вывода low-risk суммы до ротации мастер-ключа HSM.
-- **Архитектурные решения (ADR)** — почему выбрали HSM, асинхронную оркестрацию и изоляцию сервисов.
-- **NFR** — требования к доступности (99.99%), задержкам (p99 < 1 сек), безопасности (revoke SLA < 60 сек).
+- GitHub Pages с интерактивной документацией
+- 5 CONOPS / OPSCON сценариев
+- 12 тест-кейсов V&V
+- Stakeholder requirements
+- System requirements
+- Non-functional requirements
+- ICD-lite интерфейсы и event contracts
+- Архитектурные решения (ADR)
+- Risk register
+- Traceability matrix
 
 ---
 
 ## 🎯 Цель проекта
 
-Спроектировать **высоконадёжную, безопасную и соответствующую регуляторным требованиям (115-ФЗ, ГОСТ)** платформу для криптовалютной биржи с:
+Спроектировать безопасную, масштабируемую и соответствующую нормативным требованиям криптовалютную платформу с:
 
-- Self-service управлением API-ключами
-- Оркестрацией горячих и холодных кошельков
-- Централизованным аудитом и AML-контролем
-- Изоляцией между розничными/корпоративными клиентами и маркет-мейкерами
-
----
-
-## 🧩 Ключевые компоненты
-
-| Компонент | Назначение |
-|-----------|------------|
-| **Торговый движок (Rust)** | Исполнение ордеров с low latency |
-| **Оркестратор кошельков (Go + Temporal)** | Saga‑оркестрация вывода средств |
-| **HSM‑адаптер (C++/C#)** | Работа с КриптоПро HSM (ГОСТ) |
-| **AML/CFT движок (Python)** | Мониторинг подозрительных транзакций |
-| **Аудиторское хранилище (WORM)** | Неизменяемый журнал для регуляторов |
+- self-service API keys
+- HSM-based signing
+- AML/CFT контролем
+- immutable audit trail
+- tenant isolation
+- отказоустойчивой архитектурой
 
 ---
 
-## 🧪 Как это будет работать (коротко)
+## 🧩 Технологический стек
 
-1. **Трейдер** запрашивает вывод BTC.
-2. **AML‑движок** проверяет адрес по чёрным спискам.
-3. **Оркестратор** формирует транзакцию и отправляет хэш в **HSM**.
-4. **HSM (КриптоПро)** подписывает по ГОСТ Р 34.10‑2021.
-5. **Транзакция** публикуется в блокчейн и отслеживаются подтверждения.
-6. **Аудит** фиксирует каждый шаг в WORM-хранилище.
+| Компонент | Стек |
+|---|---|
+| Trading Engine | Rust |
+| Wallet Orchestrator | Go + Temporal |
+| AML Engine | Python |
+| Frontend | React |
+| Database | PostgreSQL |
+| Event Bus | Kafka |
+| Infrastructure | Kubernetes |
+| HSM | CryptoPro |
 
 ---
 
-## 📊 Диаграммы (Mermaid)
+## 🔐 Ключевые инженерные особенности
 
-<details>
-<summary>🖼️ Показать контекстную диаграмму</summary>
+- HSM signing через CryptoPro
+- WORM audit storage
+- Kafka event-driven architecture
+- Correlation IDs
+- RBAC и tenant isolation
+- Idempotency-Key protection
+- Multisig cold storage
+- SLA и SLO метрики
 
-```mermaid
-graph TB
-    subgraph Users["👥 ПОЛЬЗОВАТЕЛИ"]
-        Trader["Трейдер"]
-        MM["Маркет-мейкер"]
-    end
-    subgraph Internal["👔 ВНУТРЕННИЕ РОЛИ"]
-        Compliance["Compliance"]
-        Treasury["Казначей"]
-        SecOps["SecOps"]
-    end
-    subgraph Tech["⚙️ ТЕХНИЧЕСКИЕ СИСТЕМЫ"]
-        HSM["HSM КриптоПро"]
-        Blockchain["Блокчейн-ноды"]
-    end
+---
 
-    Central["🎯 RocketSpot Core Platform"]
+## 🌐 Документация
 
-    Trader -->|"вывод, API-ключи"| Central
-    Compliance -->|"лимиты, блокировки"| Central
-    Central --> HSM
-    Central --> Blockchain
+Главная работа:
+https://vilagcraft.github.io/System_Engineering_Akutin_2sem/
